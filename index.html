@@ -32,13 +32,14 @@
         </div>
         <p class="hint">Entre 5 et 20 joueurs. Les rôles seront répartis automatiquement.</p>
 
-        <label for="soloMission">Mission du Solo Player</label>
-        <select id="soloMission">
-          <option value="manipulateur">🅰 Manipulateur — survivre jusqu'à 3 joueurs</option>
-          <option value="chaos">🅱 Chaos — choisir 2 joueurs à faire éliminer</option>
-          <option value="opportuniste">🅲 Opportuniste — changer 2 votes et être dans l'équipe gagnante</option>
-          <option value="boss">🅳 Boss Final — être le dernier survivant</option>
-        </select>
+        <label>🎭 Missions Solo Player jouables</label>
+        <p class="hint">Le maître du jeu choisit les missions autorisées. Le joueur qui reçoit le rôle <strong>Solo Player</strong> choisira ensuite sa mission secrètement.</p>
+        <div class="solo-missions">
+          <label class="mission-option"><input type="checkbox" name="soloMission" value="manipulateur" checked> 🅰 Manipulateur <small>Survivre jusqu'à 3 joueurs</small></label>
+          <label class="mission-option"><input type="checkbox" name="soloMission" value="chaos" checked> 🅱 Chaos <small>Choisir 2 joueurs à faire éliminer</small></label>
+          <label class="mission-option"><input type="checkbox" name="soloMission" value="opportuniste" checked> 🅲 Opportuniste <small>Changer 2 votes et être dans l'équipe gagnante</small></label>
+          <label class="mission-option"><input type="checkbox" name="soloMission" value="boss" checked> 🅳 Boss Final <small>Être le dernier survivant</small></label>
+        </div>
 
         <button id="createBtn" class="primary-btn">Lancer la partie →</button>
       </div>
@@ -56,6 +57,12 @@
           <h3 id="roleName">Joueur Gamer</h3>
           <span id="roleTeam" class="team-tag">BONS</span>
           <p id="roleDescription"></p>
+          <div id="soloChoice" class="secret-box hidden">
+            <strong>🃏 Choisis ta mission secrète</strong>
+            <p class="hint">Seul le joueur qui possède ce rôle doit faire ce choix.</p>
+            <select id="soloMissionChoice"></select>
+            <button id="confirmSoloMissionBtn" class="secondary-btn">Valider ma mission</button>
+          </div>
           <div id="secretMission" class="secret-box hidden"></div>
           <button id="nextRevealBtn" class="secondary-btn">Cacher et continuer →</button>
         </div>
