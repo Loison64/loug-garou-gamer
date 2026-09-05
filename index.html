@@ -6,6 +6,9 @@
   <meta name="description" content="Loup-Garou Gamer — jeu de rôles et de bluff.">
   <title>Loup-Garou Gamer 🐺🎮</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .roles-box{display:grid;gap:10px;margin:14px 0 20px}.role-option{display:grid;grid-template-columns:auto 1fr 70px;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.04)}.role-option input[type=number]{width:70px;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#111827;color:inherit}.role-option small{display:block;opacity:.7;margin-top:3px}.role-option.disabled{opacity:.45}.section-title{margin-top:22px}.setup-total{font-weight:700;margin:8px 0 14px}.warning{color:#ffcc66}.ok{color:#7ee787}
+  </style>
 </head>
 <body>
   <main class="app">
@@ -30,10 +33,26 @@
           <strong id="playerCount">8</strong>
           <button id="plusPlayers" aria-label="Ajouter un joueur">+</button>
         </div>
-        <p class="hint">Entre 5 et 20 joueurs. Les rôles seront répartis automatiquement.</p>
 
-        <label>🎭 Missions Solo Player jouables</label>
-        <p class="hint">Le maître du jeu choisit les missions autorisées. Le joueur qui reçoit le rôle <strong>Solo Player</strong> choisira ensuite sa mission secrètement.</p>
+        <h3 class="section-title">🎭 Rôles de la partie</h3>
+        <p class="hint">Coche les rôles que tu veux jouer et indique combien de joueurs auront chaque rôle. La composition doit faire exactement le nombre de joueurs.</p>
+        <div id="rolesBox" class="roles-box">
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="gamer" checked><span>🎮 <strong>Joueur Gamer</strong><small>Aucun pouvoir</small></span><input type="number" class="role-count" data-role="gamer" min="1" max="20" value="3"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="strategist" checked><span>🧠 <strong>Stratège</strong><small>Annule un vote, 1 fois</small></span><input type="number" class="role-count" data-role="strategist" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="support" checked><span>🛡️ <strong>Support</strong><small>Protège un joueur, 1 fois</small></span><input type="number" class="role-count" data-role="support" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="analyst" checked><span>🔎 <strong>Analyste</strong><small>Découvre bon ou méchant, 1 fois</small></span><input type="number" class="role-count" data-role="analyst" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="speedrunner"><span>⚡ <strong>Speedrunner</strong><small>Vote double, 1 fois</small></span><input type="number" class="role-count" data-role="speedrunner" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="healer"><span>❤️‍🩹 <strong>Healer</strong><small>Sauve la victime de nuit</small></span><input type="number" class="role-count" data-role="healer" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="wolf" checked><span>🐺 <strong>Loup Gamer</strong><small>Élimine une victime chaque nuit</small></span><input type="number" class="role-count" data-role="wolf" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="hacker" checked><span>💻 <strong>Hacker</strong><small>Bloque un pouvoir, 1 fois</small></span><input type="number" class="role-count" data-role="hacker" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="saboteur"><span>💣 <strong>Saboteur</strong><small>Déclenche un faux événement, 1 fois</small></span><input type="number" class="role-count" data-role="saboteur" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="solo"><span>🃏 <strong>Solo Player</strong><small>Choisit une mission secrète</small></span><input type="number" class="role-count" data-role="solo" min="1" max="20" value="1"></label>
+          <label class="role-option"><input type="checkbox" class="role-check" data-role="traitor"><span>🕵️ <strong>Traître</strong><small>Rejoint les Hackers au tour 3</small></span><input type="number" class="role-count" data-role="traitor" min="1" max="20" value="1"></label>
+        </div>
+        <div id="roleTotal" class="setup-total"></div>
+
+        <h3 class="section-title">🃏 Missions Solo Player autorisées</h3>
+        <p class="hint">Le maître du jeu choisit les missions disponibles. Le Solo Player choisira ensuite sa mission secrètement.</p>
         <div class="solo-missions">
           <label class="mission-option"><input type="checkbox" name="soloMission" value="manipulateur" checked> 🅰 Manipulateur <small>Survivre jusqu'à 3 joueurs</small></label>
           <label class="mission-option"><input type="checkbox" name="soloMission" value="chaos" checked> 🅱 Chaos <small>Choisir 2 joueurs à faire éliminer</small></label>
@@ -71,21 +90,15 @@
 
     <section id="game" class="screen">
       <header class="game-header">
-        <div>
-          <p class="eyebrow" id="roundLabel">TOUR 1</p>
-          <h2 id="phaseTitle">🌙 Nuit</h2>
-        </div>
+        <div><p class="eyebrow" id="roundLabel">TOUR 1</p><h2 id="phaseTitle">🌙 Nuit</h2></div>
         <div class="alive-count"><span id="aliveCount">0</span> vivants</div>
       </header>
-
       <div id="gameMessage" class="message"></div>
       <div id="actionArea" class="action-area"></div>
       <div id="playersList" class="players-grid"></div>
-
       <button id="phaseBtn" class="primary-btn">Passer à la suite →</button>
     </section>
   </main>
-
   <script src="script.js"></script>
 </body>
 </html>
