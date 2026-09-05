@@ -7,7 +7,7 @@
   <title>Loup-Garou Gamer 🐺🎮</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .roles-box{display:grid;gap:10px;margin:14px 0 20px}.role-option{display:grid;grid-template-columns:auto 1fr 70px;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.04)}.role-option input[type=number]{width:70px;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#111827;color:inherit}.role-option small{display:block;opacity:.7;margin-top:3px}.role-option.disabled{opacity:.45}.section-title{margin-top:22px}.setup-total{font-weight:700;margin:8px 0 14px}.warning{color:#ffcc66}.ok{color:#7ee787}.names-box{display:grid;gap:8px;margin:12px 0 20px}.name-input{width:100%;box-sizing:border-box;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:#111827;color:inherit;font-size:1rem}.secret-turn{padding:18px;border-radius:18px;text-align:center;background:rgba(120,90,255,.12);border:1px solid rgba(150,120,255,.25);margin-bottom:14px}.secret-turn h3{margin:4px 0 8px}.action-buttons{display:flex;gap:10px;flex-wrap:wrap}.action-buttons button{flex:1;min-width:180px}
+    .roles-box{display:grid;gap:10px;margin:14px 0 20px}.role-option{display:grid;grid-template-columns:auto 1fr 70px;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.04)}.role-option input[type=number]{width:70px;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#111827;color:inherit}.role-option small{display:block;opacity:.7;margin-top:3px}.role-option.disabled{opacity:.45}.section-title{margin-top:22px}.setup-total{font-weight:700;margin:8px 0 14px}.warning{color:#ffcc66}.ok{color:#7ee787}.names-box{display:grid;gap:10px;margin:12px 0 20px}.name-player{display:grid;gap:6px;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.04)}.name-player-label{font-weight:700}.name-input{width:100%;box-sizing:border-box;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:#111827;color:inherit;font-size:1rem}.secret-turn{padding:18px;border-radius:18px;text-align:center;background:rgba(120,90,255,.12);border:1px solid rgba(150,120,255,.25);margin-bottom:14px}.secret-turn h3{margin:4px 0 8px}.action-buttons{display:flex;gap:10px;flex-wrap:wrap}.action-buttons button{flex:1;min-width:180px}
   </style>
 </head>
 <body>
@@ -35,7 +35,7 @@
         </div>
 
         <h3 class="section-title">👤 Pseudos des joueurs</h3>
-        <p class="hint">Chaque joueur écrit son pseudo. Ils seront utilisés pendant les tours secrets.</p>
+        <p class="hint">Écris le pseudo de chaque joueur. Ils seront utilisés pendant les tours secrets.</p>
         <div id="namesBox" class="names-box"></div>
 
         <h3 class="section-title">🎭 Rôles de la partie</h3>
@@ -104,5 +104,28 @@
     </section>
   </main>
   <script src="script.js"></script>
+  <script>
+    function labelPlayerNames(){
+      const box=document.getElementById('namesBox');
+      if(!box)return;
+      [...box.querySelectorAll(':scope > input.name-input')].forEach((input,index)=>{
+        const wrap=document.createElement('div');
+        wrap.className='name-player';
+        const label=document.createElement('label');
+        label.className='name-player-label';
+        label.textContent=`👤 Joueur ${index+1}`;
+        label.htmlFor=`playerName${index+1}`;
+        input.id=`playerName${index+1}`;
+        input.placeholder='Entre ton pseudo';
+        box.insertBefore(wrap,input);
+        wrap.append(label,input);
+      });
+    }
+    const namesBox=document.getElementById('namesBox');
+    if(namesBox){
+      new MutationObserver(labelPlayerNames).observe(namesBox,{childList:true});
+      labelPlayerNames();
+    }
+  </script>
 </body>
 </html>
