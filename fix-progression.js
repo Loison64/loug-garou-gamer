@@ -7,18 +7,18 @@
       reveal.addEventListener('click',function(e){
         e.preventDefault();
         e.stopImmediatePropagation();
-        if(!window.state || !Array.isArray(state.players) || !state.players.length)return;
+        if(typeof state==='undefined' || !Array.isArray(state.players) || !state.players.length)return;
         const total=state.players.length;
         const index=Number(state.revealIndex)||0;
         if(index>=total-1){
           state.revealIndex=total;
-          if(typeof startNight==='function')startNight();
+          startNight();
           return;
         }
         state.revealIndex=index+1;
         const next=state.players[state.revealIndex];
         if(next)document.getElementById('revealPlayer').textContent=next.name;
-        if(typeof resetReveal==='function')resetReveal();
+        resetReveal();
       },true);
     }
 
@@ -30,7 +30,7 @@
         if(e.target.id!=='secretDone')return;
         e.preventDefault();
         e.stopImmediatePropagation();
-        if(!window.state || !Array.isArray(state.turnQueue))return;
+        if(typeof state==='undefined' || !Array.isArray(state.turnQueue))return;
         const p=player(state.turnQueue[state.turnIndex]);
         if(!p)return;
 
