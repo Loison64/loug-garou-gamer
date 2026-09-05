@@ -8,7 +8,7 @@ const ROLES = {
   wolf: { name: 'Loup Gamer', icon: '🐺', team: 'HACKERS', description: 'Élimine une victime chaque nuit. Les loups choisissent ensemble en secret.' },
   hacker: { name: 'Hacker', icon: '💻', team: 'HACKERS', description: 'Une fois dans la partie, bloque le pouvoir d’un joueur pour un tour.' },
   saboteur: { name: 'Saboteur', icon: '💣', team: 'HACKERS', description: 'Une fois dans la partie, provoque un faux événement annoncé par le maître du jeu.' },
-  solo: { name: 'Solo Player', icon: '🃏', team: 'SOLO', description: 'Choisit une mission secrète au début de la partie et tente de la réussir.' },
+  solo: { name: 'Solo Player', icon: '🃏', team: 'SOLO', description: 'Choisit lui-même une mission secrète parmi celles autorisées par le maître du jeu.' },
   traitor: { name: 'Traître', icon: '🕵️', team: 'BONS → HACKERS', description: 'Commence bon. À partir du tour 3, rejoint secrètement les Hackers et participe aux décisions des loups.' }
 };
 
@@ -19,7 +19,22 @@ const MISSION_NAMES = {
   boss: 'Boss Final'
 };
 
-let state = { players: [], revealIndex: 0, round: 1, phase: 'night', soloMission: 'manipulateur' };
+const MISSION_DESCRIPTIONS = {
+  manipulateur: 'Survivre jusqu’à ce qu’il ne reste que 3 joueurs. Peu importe qui gagne ensuite.',
+  chaos: 'Choisir secrètement 2 joueurs au début. Si ces 2 joueurs sont éliminés par n’importe quel moyen, tu gagnes immédiatement.',
+  opportuniste: 'Changer ton vote au dernier moment 2 fois pendant la partie ET être dans l’équipe gagnante.',
+  boss: 'Être le dernier survivant.'
+};
+
+let state = {
+  players: [],
+  revealIndex: 0,
+  round: 1,
+  phase: 'night',
+  soloMission: null,
+  enabledSoloMissions: ['manipulateur', 'chaos', 'opportuniste', 'boss']
+};
+
 const $ = (id) => document.getElementById(id);
 
 function showScreen(id) {
@@ -28,7 +43,6 @@ function showScreen(id) {
 }
 
 function buildRoles(count) {
-  // Base V1: more players = more evil roles. One Solo and one Traître are added at 10+ players.
   const roles = [];
   const good = Math.max(3, Math.round(count * 0.55));
   const hackers = Math.max(2, Math.round(count * 0.25));
@@ -52,9 +66,21 @@ function shuffle(array) {
   return copy;
 }
 
+function getSelectedSoloMissions() {
+  return [...document.querySelectorAll('input[name="soloMission"]:checked')].map(input => input.value);
+}
+
 function createGame() {
   const count = Number($('playerCount').textContent);
-  state.soloMission = $('soloMission').value;
+  const missions = getSelectedSoloMissions();
+
+  if (missions.length === 0) {
+    alert('Sélectionne au moins une mission Solo Player.');
+    return;
+  }
+
+  state.enabledSoloMissions = missions;
+  state.soloMission = null;
   const roles = shuffle(buildRoles(count));
   state.players = roles.map((role, i) => ({
     id: i + 1,
@@ -69,6 +95,9 @@ function createGame() {
   $('revealPlayer').textContent = state.players[0].name;
   $('roleCard').classList.add('hidden');
   $('showRoleBtn').classList.remove('hidden');
+  $('soloChoice').classList.add('hidden');
+  $('secretMission').classList.add('hidden');
+  $('nextRevealBtn').classList.remove('hidden');
   showScreen('reveal');
 }
 
@@ -79,15 +108,34 @@ function showRole() {
   $('roleName').textContent = role.name;
   $('roleTeam').textContent = role.team;
   $('roleDescription').textContent = role.description;
-  const secret = $('secretMission');
+  $('secretMission').classList.add('hidden');
+  $('soloChoice').classList.add('hidden');
+  $('nextRevealBtn').classList.remove('hidden');
+
   if (player.role === 'solo') {
-    secret.textContent = `Mission secrète : ${MISSION_NAMES[state.soloMission]}`;
-    secret.classList.remove('hidden');
-  } else {
-    secret.classList.add('hidden');
+    const choice = $('soloMissionChoice');
+    choice.innerHTML = state.enabledSoloMissions.map(mission => `
+      <option value="${mission}">${MISSION_NAMES[mission]} — ${MISSION_DESCRIPTIONS[mission]}</option>
+    `).join('');
+    $('soloChoice').classList.remove('hidden');
+    $('nextRevealBtn').classList.add('hidden');
   }
+
   $('roleCard').classList.remove('hidden');
   $('showRoleBtn').classList.add('hidden');
+}
+
+function confirmSoloMission() {
+  const player = state.players[state.revealIndex];
+  if (player.role !== 'solo') return;
+
+  state.soloMission = $('soloMissionChoice').value;
+  player.soloMission = state.soloMission;
+
+  $('soloChoice').classList.add('hidden');
+  $('secretMission').textContent = `🔒 Mission secrète choisie : ${MISSION_NAMES[state.soloMission]} — ${MISSION_DESCRIPTIONS[state.soloMission]}`;
+  $('secretMission').classList.remove('hidden');
+  $('nextRevealBtn').classList.remove('hidden');
 }
 
 function nextReveal() {
@@ -99,6 +147,9 @@ function nextReveal() {
   $('revealPlayer').textContent = state.players[state.revealIndex].name;
   $('roleCard').classList.add('hidden');
   $('showRoleBtn').classList.remove('hidden');
+  $('soloChoice').classList.add('hidden');
+  $('secretMission').classList.add('hidden');
+  $('nextRevealBtn').classList.remove('hidden');
 }
 
 function renderPlayers() {
@@ -121,8 +172,8 @@ function renderGame() {
     ? 'Le village dort… Le maître du jeu peut maintenant gérer les pouvoirs de nuit.'
     : 'Le village se réveille. Discutez, accusez et préparez le vote.';
   $('actionArea').innerHTML = state.phase === 'night'
-    ? '<strong>🌙 Actions de nuit</strong><p class="hint">La vraie gestion des pouvoirs sera ajoutée dans la prochaine étape. Cette base prépare déjà les rôles et les phases.</p>'
-    : '<strong>🗳️ Vote du village</strong><p class="hint">Le système de vote et les pouvoirs seront ajoutés ensuite.</p>';
+    ? '<strong>🌙 Actions de nuit</strong><p class="hint">La gestion complète des pouvoirs sera ajoutée ensuite.</p>'
+    : '<strong>🗳️ Vote du village</strong><p class="hint">Le système de vote sera ajouté ensuite.</p>';
 }
 
 function nextPhase() {
@@ -146,6 +197,7 @@ $('plusPlayers').addEventListener('click', () => {
 });
 $('createBtn').addEventListener('click', createGame);
 $('showRoleBtn').addEventListener('click', showRole);
+$('confirmSoloMissionBtn').addEventListener('click', confirmSoloMission);
 $('nextRevealBtn').addEventListener('click', nextReveal);
 $('phaseBtn').addEventListener('click', nextPhase);
 document.querySelectorAll('[data-go]').forEach(btn => btn.addEventListener('click', () => showScreen(btn.dataset.go)));
