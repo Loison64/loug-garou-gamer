@@ -121,19 +121,11 @@
       <div id="gameMessage" class="message"></div>
       <div id="actionArea" class="action-area"></div>
       <div id="playersList" class="players-grid"></div>
-      <button id="phaseBtn" class="primary-btn">Passer à la suite →</button>
+      <button id="phaseBtn" class="primary-btn" type="button">Passer à la suite →</button>
     </section>
   </main>
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="script.js"></script>
-  <script src="fix-progression.js"></script>
   <script>
-    function labelPlayerNames(){
-      const box=document.getElementById('namesBox'); if(!box)return;
-      [...box.querySelectorAll(':scope > input.name-input')].forEach((input,index)=>{const wrap=document.createElement('div');wrap.className='name-player';const label=document.createElement('label');label.className='name-player-label';label.textContent=`👤 Joueur ${index+1}`;label.htmlFor=`playerName${index+1}`;input.id=`playerName${index+1}`;input.placeholder='Entre ton pseudo';box.insertBefore(wrap,input);wrap.append(label,input);});
-    }
-    const namesBox=document.getElementById('namesBox');
-    if(namesBox){new MutationObserver(labelPlayerNames).observe(namesBox,{childList:true});labelPlayerNames();}
     const onlineBox=document.getElementById('onlineBox');
     document.querySelectorAll('input[name="gameMode"]').forEach(r=>r.addEventListener('change',()=>onlineBox.classList.toggle('hidden',r.value!=='online'||!r.checked)));
     document.getElementById('createRoomBtn')?.addEventListener('click',()=>{document.getElementById('roomControls').classList.remove('hidden');document.getElementById('onlineStatus').textContent='🟢 Crée une salle puis partage le code avec tes amis.';});
