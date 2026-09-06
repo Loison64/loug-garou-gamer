@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loup-Garou Gamer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section id="home" class="screen active">
+      <div class="card center">
+        <div class="logo">🐺</div>
+        <p class="eyebrow">JEU DE BLUFF</p>
+        <h1>Loup-Garou Gamer</h1>
+        <p class="subtitle">Une partie simple, locale et jouable directement dans le navigateur.</p>
+        <button id="startBtn" class="primary">🎮 Créer une partie</button>
+      </div>
+    </section>
+
+    <section id="setup" class="screen">
+      <div class="card">
+        <button class="back" data-screen="home">← Retour</button>
+        <p class="eyebrow">CONFIGURATION</p>
+        <h2>Prépare la partie</h2>
+
+        <label>Nombre de joueurs</label>
+        <div class="counter">
+          <button id="minusPlayers">−</button>
+          <strong id="playerCount">8</strong>
+          <button id="plusPlayers">+</button>
+        </div>
+        <p class="hint">Entre 5 et 20 joueurs.</p>
+
+        <div id="namesBox" class="names"></div>
+        <button id="launchBtn" class="primary">▶️ Lancer la partie</button>
+      </div>
+    </section>
+
+    <section id="reveal" class="screen">
+      <div class="card center">
+        <p class="eyebrow">DISTRIBUTION DES RÔLES</p>
+        <div id="revealPlayer" class="badge">Joueur 1</div>
+        <h2>Découvre ton rôle</h2>
+        <p class="hint">Passe l'appareil au joueur indiqué.</p>
+
+        <button id="showRoleBtn" class="primary">👁️ Voir mon rôle</button>
+
+        <div id="roleCard" class="role-card hidden">
+          <div id="roleIcon" class="role-icon">🎮</div>
+          <h3 id="roleName">Joueur Gamer</h3>
+          <div id="roleTeam" class="team">BONS</div>
+          <p id="roleDescription"></p>
+          <button id="nextRevealBtn" class="secondary">Cacher et continuer →</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="game" class="screen">
+      <div class="card">
+        <div class="game-top">
+          <div>
+            <p class="eyebrow" id="roundLabel">TOUR 1</p>
+            <h2 id="phaseTitle">🌙 Nuit</h2>
+          </div>
+          <div class="badge"><span id="aliveCount">0</span> vivants</div>
+        </div>
+        <div id="gameMessage" class="message"></div>
+        <div id="actionArea" class="action"></div>
+        <div id="playersList" class="players"></div>
+      </div>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
