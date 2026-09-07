@@ -25,8 +25,32 @@
         <div class="logo">🌐</div>
         <p class="eyebrow">MODE EN LIGNE</p>
         <h2>Jouer en ligne</h2>
-        <p class="subtitle">Le mode en ligne arrive bientôt !</p>
-        <p class="hint">La prochaine étape sera de créer une partie avec un code et permettre aux joueurs de rejoindre depuis leur propre appareil.</p>
+        <p class="subtitle">Crée une partie ou rejoins tes amis.</p>
+        <button id="createOnlineBtn" class="primary" type="button">➕ Créer une partie</button>
+        <button id="joinOnlineBtn" class="secondary" type="button">🔗 Rejoindre une partie</button>
+      </div>
+    </section>
+
+    <section id="onlineCreate" class="screen">
+      <div class="card center">
+        <button class="back" data-screen="online">← Retour</button>
+        <div class="logo">➕</div>
+        <p class="eyebrow">CRÉER UNE PARTIE</p>
+        <h2>Créer une partie en ligne</h2>
+        <p class="subtitle">La prochaine étape sera de générer un code de partie à partager.</p>
+        <button class="primary" type="button" disabled>🎮 Créer le salon</button>
+      </div>
+    </section>
+
+    <section id="onlineJoin" class="screen">
+      <div class="card center">
+        <button class="back" data-screen="online">← Retour</button>
+        <div class="logo">🔗</div>
+        <p class="eyebrow">REJOINDRE UNE PARTIE</p>
+        <h2>Rejoindre une partie</h2>
+        <p class="subtitle">Entre le code donné par le créateur de la partie.</p>
+        <input id="roomCode" class="name-input" maxlength="8" placeholder="Code de la partie" autocomplete="off">
+        <button class="primary" type="button" disabled>🚪 Rejoindre</button>
       </div>
     </section>
 
@@ -118,11 +142,16 @@
         roles.sort(()=>Math.random()-0.5).slice(0,Math.floor(Math.random()*(max+1))).forEach(r=>r.checked=true);
         if(typeof updateRoleCount==='function')updateRoleCount();
       };
-      const onlineBtn=document.getElementById('onlineBtn');
-      if(onlineBtn)onlineBtn.onclick=()=>{
+      const showOnline=(id)=>{
         document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-        document.getElementById('online')?.classList.add('active');
+        document.getElementById(id)?.classList.add('active');
       };
+      const onlineBtn=document.getElementById('onlineBtn');
+      if(onlineBtn)onlineBtn.onclick=()=>showOnline('online');
+      const createBtn=document.getElementById('createOnlineBtn');
+      if(createBtn)createBtn.onclick=()=>showOnline('onlineCreate');
+      const joinBtn=document.getElementById('joinOnlineBtn');
+      if(joinBtn)joinBtn.onclick=()=>showOnline('onlineJoin');
     });
   </script>
 </body>
