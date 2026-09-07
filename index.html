@@ -29,10 +29,24 @@
 
         <div class="special-box">
           <h3>✨ Rôles spéciaux</h3>
-          <p class="hint">Active ceux que tu veux ajouter à la partie. Chaque rôle sélectionné remplace un Joueur Gamer.</p>
-          <label class="role-option"><input type="checkbox" class="special-role" value="Stratège"><span>🧠 <b>Stratège</b><small>Une fois par partie, peut annuler une élimination par vote.</small></span></label>
-          <label class="role-option"><input type="checkbox" class="special-role" value="Analyste"><span>🔎 <b>Analyste</b><small>Une fois par partie, découvre si un joueur est BON ou HACKER.</small></span></label>
-          <label class="role-option"><input type="checkbox" class="special-role" value="Speedrunner"><span>⚡ <b>Speedrunner</b><small>Son vote compte double pendant chaque vote.</small></span></label>
+          <p class="hint">Coche les rôles que tu veux utiliser. Chaque rôle coché remplace un Joueur Gamer.</p>
+          <div class="role-group"><b>🛡️ BONS</b>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Stratège"><span>🧠 <b>Stratège</b><small>Une fois, annule une élimination par vote.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Support"><span>🤝 <b>Support</b><small>Une fois, protège un joueur d'une élimination, de jour ou de nuit. Peut se protéger lui-même.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Analyste"><span>🔎 <b>Analyste</b><small>Une fois, découvre si un joueur est BON ou HACKER.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Speedrunner"><span>⚡ <b>Speedrunner</b><small>Une fois par partie, son vote compte double.</small></span></label>
+          </div>
+          <div class="role-group"><b>💻 HACKERS</b>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Hacker"><span>💻 <b>Hacker spécial</b><small>Une fois, bloque le pouvoir d'un joueur pendant la nuit.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Saboteur"><span>🧨 <b>Saboteur</b><small>Une fois, déclenche un faux événement pour semer le doute.</small></span></label>
+          </div>
+          <div class="role-group"><b>🎭 SOLO</b>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Manipulateur"><span>🎭 <b>Manipulateur</b><small>Gagne s'il est encore vivant lorsqu'il reste 3 joueurs.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Chaos"><span>🌀 <b>Chaos</b><small>Choisit secrètement 2 joueurs. Gagne si les deux sont éliminés.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Opportuniste"><span>🎯 <b>Opportuniste</b><small>Peut changer son vote 2 fois et gagne avec le camp victorieux.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Boss Final"><span>👑 <b>Boss Final</b><small>Gagne s'il est le dernier joueur vivant.</small></span></label>
+            <label class="role-option"><input type="checkbox" class="special-role" value="Traître"><span>🗡️ <b>Traître</b><small>Commence BON puis rejoint les Hackers à partir du tour 3.</small></span></label>
+          </div>
           <p id="roleCount" class="role-count">0 rôle spécial activé</p>
         </div>
 
