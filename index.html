@@ -30,6 +30,7 @@
         <div class="special-box">
           <h3>✨ Rôles spéciaux</h3>
           <p class="hint">Coche les rôles que tu veux utiliser. Chaque rôle coché remplace un Joueur Gamer.</p>
+          <button id="randomRolesBtn" class="secondary" type="button">🎲 Choisir les rôles aléatoirement</button>
           <div class="role-group"><b>🛡️ BONS</b>
             <label class="role-option"><input type="checkbox" class="special-role" value="Stratège"><span>🧠 <b>Stratège</b><small>Une fois, annule une élimination par vote.</small></span></label>
             <label class="role-option"><input type="checkbox" class="special-role" value="Support"><span>🤝 <b>Support</b><small>Une fois, protège un joueur d'une élimination, de jour ou de nuit. Peut se protéger lui-même.</small></span></label>
@@ -96,5 +97,21 @@
     </section>
   </main>
   <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded',()=>{
+      const randomBtn=document.getElementById('randomRolesBtn');
+      if(!randomBtn)return;
+      randomBtn.onclick=()=>{
+        const roles=[...document.querySelectorAll('.special-role')];
+        roles.forEach(r=>r.checked=false);
+        const playerCount=+(document.getElementById('playerCount')?.textContent||8);
+        const max=Math.min(roles.length,Math.max(0,playerCount-2));
+        const shuffled=roles.sort(()=>Math.random()-0.5);
+        const count=Math.floor(Math.random()*(max+1));
+        shuffled.slice(0,count).forEach(r=>r.checked=true);
+        if(typeof updateRoleCount==='function')updateRoleCount();
+      };
+    });
+  </script>
 </body>
 </html>
