@@ -13,8 +13,20 @@
         <div class="logo">🐺</div>
         <p class="eyebrow">JEU DE BLUFF</p>
         <h1>Loup-Garou Gamer</h1>
-        <p class="subtitle">Une partie simple, locale et jouable directement dans le navigateur.</p>
-        <button id="startBtn" class="primary">🎮 Créer une partie</button>
+        <p class="subtitle">Choisis ton mode de jeu.</p>
+        <button id="startBtn" class="primary">📱 Mode local</button>
+        <button id="onlineBtn" class="secondary" type="button">🌐 Mode en ligne</button>
+      </div>
+    </section>
+
+    <section id="online" class="screen">
+      <div class="card center">
+        <button class="back" data-screen="home">← Retour</button>
+        <div class="logo">🌐</div>
+        <p class="eyebrow">MODE EN LIGNE</p>
+        <h2>Jouer en ligne</h2>
+        <p class="subtitle">Le mode en ligne arrive bientôt !</p>
+        <p class="hint">La prochaine étape sera de créer une partie avec un code et permettre aux joueurs de rejoindre depuis leur propre appareil.</p>
       </div>
     </section>
 
@@ -26,7 +38,6 @@
         <label>Nombre de joueurs</label>
         <div class="counter"><button id="minusPlayers">−</button><strong id="playerCount">8</strong><button id="plusPlayers">+</button></div>
         <p class="hint">Entre 5 et 20 joueurs.</p>
-
         <div class="special-box">
           <h3>✨ Rôles spéciaux</h3>
           <p class="hint">Coche les rôles que tu veux utiliser. Chaque rôle coché remplace un Joueur Gamer.</p>
@@ -50,7 +61,6 @@
           </div>
           <p id="roleCount" class="role-count">0 rôle spécial activé</p>
         </div>
-
         <div id="namesBox" class="names"></div>
         <button id="launchBtn" class="primary">▶️ Lancer la partie</button>
       </div>
@@ -100,16 +110,18 @@
   <script>
     document.addEventListener('DOMContentLoaded',()=>{
       const randomBtn=document.getElementById('randomRolesBtn');
-      if(!randomBtn)return;
-      randomBtn.onclick=()=>{
+      if(randomBtn)randomBtn.onclick=()=>{
         const roles=[...document.querySelectorAll('.special-role')];
         roles.forEach(r=>r.checked=false);
         const playerCount=+(document.getElementById('playerCount')?.textContent||8);
         const max=Math.min(roles.length,Math.max(0,playerCount-2));
-        const shuffled=roles.sort(()=>Math.random()-0.5);
-        const count=Math.floor(Math.random()*(max+1));
-        shuffled.slice(0,count).forEach(r=>r.checked=true);
+        roles.sort(()=>Math.random()-0.5).slice(0,Math.floor(Math.random()*(max+1))).forEach(r=>r.checked=true);
         if(typeof updateRoleCount==='function')updateRoleCount();
+      };
+      const onlineBtn=document.getElementById('onlineBtn');
+      if(onlineBtn)onlineBtn.onclick=()=>{
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+        document.getElementById('online')?.classList.add('active');
       };
     });
   </script>
