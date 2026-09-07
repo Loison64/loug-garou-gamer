@@ -23,15 +23,9 @@
         <button class="back" data-screen="home">← Retour</button>
         <p class="eyebrow">CONFIGURATION</p>
         <h2>Prépare la partie</h2>
-
         <label>Nombre de joueurs</label>
-        <div class="counter">
-          <button id="minusPlayers">−</button>
-          <strong id="playerCount">8</strong>
-          <button id="plusPlayers">+</button>
-        </div>
+        <div class="counter"><button id="minusPlayers">−</button><strong id="playerCount">8</strong><button id="plusPlayers">+</button></div>
         <p class="hint">Entre 5 et 20 joueurs.</p>
-
         <div id="namesBox" class="names"></div>
         <button id="launchBtn" class="primary">▶️ Lancer la partie</button>
       </div>
@@ -43,9 +37,7 @@
         <div id="revealPlayer" class="badge">Joueur 1</div>
         <h2>Découvre ton rôle</h2>
         <p class="hint">Passe l'appareil au joueur indiqué.</p>
-
         <button id="showRoleBtn" class="primary">👁️ Voir mon rôle</button>
-
         <div id="roleCard" class="role-card hidden">
           <div id="roleIcon" class="role-icon">🎮</div>
           <h3 id="roleName">Joueur Gamer</h3>
@@ -59,15 +51,23 @@
     <section id="game" class="screen">
       <div class="card">
         <div class="game-top">
-          <div>
-            <p class="eyebrow" id="roundLabel">TOUR 1</p>
-            <h2 id="phaseTitle">🌙 Nuit</h2>
-          </div>
+          <div><p class="eyebrow" id="roundLabel">TOUR 1</p><h2 id="phaseTitle">🌙 Nuit</h2></div>
           <div class="badge"><span id="aliveCount">0</span> vivants</div>
         </div>
         <div id="gameMessage" class="message"></div>
         <div id="actionArea" class="action"></div>
         <div id="playersList" class="players"></div>
+      </div>
+    </section>
+
+    <section id="end" class="screen">
+      <div class="card center end-card">
+        <div id="winnerIcon" class="winner-icon">🏆</div>
+        <p class="eyebrow">FIN DE LA PARTIE</p>
+        <h2 id="winnerTitle">Victoire !</h2>
+        <p id="winnerMessage" class="subtitle"></p>
+        <div id="finalPlayers" class="final-players"></div>
+        <button id="restartBtn" class="primary">🔄 Nouvelle partie</button>
       </div>
     </section>
   </main>
