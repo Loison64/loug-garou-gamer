@@ -26,6 +26,16 @@
         <label>Nombre de joueurs</label>
         <div class="counter"><button id="minusPlayers">−</button><strong id="playerCount">8</strong><button id="plusPlayers">+</button></div>
         <p class="hint">Entre 5 et 20 joueurs.</p>
+
+        <div class="special-box">
+          <h3>✨ Rôles spéciaux</h3>
+          <p class="hint">Active ceux que tu veux ajouter à la partie. Chaque rôle sélectionné remplace un Joueur Gamer.</p>
+          <label class="role-option"><input type="checkbox" class="special-role" value="Stratège"><span>🧠 <b>Stratège</b><small>Une fois par partie, peut annuler une élimination par vote.</small></span></label>
+          <label class="role-option"><input type="checkbox" class="special-role" value="Analyste"><span>🔎 <b>Analyste</b><small>Une fois par partie, découvre si un joueur est BON ou HACKER.</small></span></label>
+          <label class="role-option"><input type="checkbox" class="special-role" value="Speedrunner"><span>⚡ <b>Speedrunner</b><small>Son vote compte double pendant chaque vote.</small></span></label>
+          <p id="roleCount" class="role-count">0 rôle spécial activé</p>
+        </div>
+
         <div id="namesBox" class="names"></div>
         <button id="launchBtn" class="primary">▶️ Lancer la partie</button>
       </div>
