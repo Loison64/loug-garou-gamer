@@ -1,4 +1,13 @@
-<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Loup-Garou Gamer</title><link rel="stylesheet" href="style.css"></head><body><main class="app">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loup-Garou Gamer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="app">
 <section id="home" class="screen active"><div class="card center"><div class="logo">🐺</div><p class="eyebrow">JEU DE BLUFF</p><h1>Loup-Garou Gamer</h1><p class="subtitle">Choisis ton mode de jeu.</p><button id="startBtn" class="primary">📱 Mode local</button><button id="onlineBtn" class="secondary">🌐 Mode en ligne</button></div></section>
 <section id="online" class="screen"><div class="card center"><button class="back" data-screen="home">← Retour</button><div class="logo">🌐</div><p class="eyebrow">MODE EN LIGNE</p><h2>Jouer en ligne</h2><p class="subtitle">Une vraie partie entre plusieurs appareils.</p><button id="createOnlineBtn" class="primary">➕ Créer une partie</button><button id="joinOnlineBtn" class="secondary">🔗 Rejoindre une partie</button></div></section>
 <section id="onlineCreate" class="screen"><div class="card center"><button class="back" data-screen="online">← Retour</button><div class="logo">➕</div><p class="eyebrow">CRÉER UNE PARTIE</p><h2>Créer une partie</h2><input id="createPseudo" class="name-input" maxlength="20" placeholder="Ton pseudo"><button id="createRoomBtn" class="primary">🎮 Créer le salon</button><p id="onlineStatus" class="hint">Connexion P2P sécurisée</p></div></section>
@@ -11,4 +20,9 @@
 <section id="reveal" class="screen"><div class="card center"><p class="eyebrow">DISTRIBUTION DES RÔLES</p><div id="revealPlayer" class="badge">Joueur 1</div><h2>Découvre ton rôle</h2><p class="hint">Passe l'appareil.</p><button id="showRoleBtn" class="primary">👁️ Voir mon rôle</button><div id="roleCard" class="role-card hidden"><div id="roleIcon" class="role-icon">🎮</div><h3 id="roleName">Joueur Gamer</h3><div id="roleTeam" class="team">BONS</div><p id="roleDescription"></p><button id="nextRevealBtn" class="secondary">Cacher et continuer →</button></div></div></section>
 <section id="game" class="screen"><div class="card"><div class="game-top"><div><p class="eyebrow" id="roundLabel">TOUR 1</p><h2 id="phaseTitle">🌙 Nuit</h2></div><div class="badge"><span id="aliveCount">0</span> vivants</div></div><div id="gameMessage" class="message"></div><div id="actionArea" class="action"></div><div id="playersList" class="players"></div></div></section>
 <section id="end" class="screen"><div class="card center end-card"><div id="winnerIcon" class="winner-icon">🏆</div><p class="eyebrow">FIN DE LA PARTIE</p><h2 id="winnerTitle">Victoire !</h2><p id="winnerMessage" class="subtitle"></p><div id="finalPlayers" class="final-players"></div><button id="restartBtn" class="primary">🔄 Nouvelle partie</button></div></section>
-</main><script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script><script src="script.js?v=5"></script><script src="online.js?v=7"></script><script>document.addEventListener('DOMContentLoaded',()=>{const b=document.getElementById('randomRolesBtn');if(b)b.onclick=()=>{const r=[...document.querySelectorAll('.special-role')];r.forEach(x=>x.checked=false);const n=+(document.getElementById('playerCount')?.textContent||8),m=Math.min(r.length,Math.max(0,n-2));r.sort(()=>Math.random()-.5).slice(0,Math.floor(Math.random()*(m+1))).forEach(x=>x.checked=true);const c=document.getElementById('roleCount');if(c){const k=r.filter(x=>x.checked).length;c.textContent=`${k} rôle spécial${k>1?'s':''} activé${k>1?'s':''}`}}});</script></body></html>
+</main>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+<script src="script.js?v=6"></script>
+<script src="online.js?v=8"></script>
+</body>
+</html>
