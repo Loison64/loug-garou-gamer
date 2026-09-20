@@ -143,3 +143,5 @@ h1,h2{letter-spacing:-.03em;text-shadow:0 0 30px #8d78ff22}
   .logo{font-size:62px}
   .primary,.secondary{padding:14px 16px}
 }
+
+.waiting-role{text-align:center;padding:60px 25px;border:1px solid #454b79;border-radius:24px;background:linear-gradient(145deg,#12172a,#090d19);box-shadow:0 0 40px #8d78ff18}.waiting-role .role-icon{font-size:70px;margin-bottom:20px}.waiting-role h2{margin:10px 0}.waiting-role p{color:#aeb7d4}
