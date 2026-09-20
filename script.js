@@ -30,7 +30,16 @@ const NARUTO_ROLES={
 };
 function currentTheme(){return $('localTheme')?.value||'gamer'}
 function applyTheme(theme='gamer'){document.body.dataset.theme=theme;document.documentElement.dataset.theme=theme;document.title=theme==='naruto'?'Loup-Garou Naruto':'Loup-Garou Gamer'}
-function narutoRolesForCount(n){const presets={3:['Naruto','Pain','Orochimaru'],4:['Naruto','Kakashi','Itachi','Orochimaru'],5:['Naruto','Sakura','Kakashi','Itachi','Pain'],6:['Naruto','Sakura','Shikamaru','Itachi','Pain','Orochimaru'],7:['Naruto','Kakashi','Sakura','Shikamaru','Itachi','Pain','Orochimaru']};return presets[n]||presets[7]}
+function narutoRolesForCount(n){
+ const presets={3:['Naruto','Pain','Orochimaru'],4:['Naruto','Kakashi','Itachi','Orochimaru'],5:['Naruto','Sakura','Kakashi','Itachi','Pain'],6:['Naruto','Sakura','Shikamaru','Itachi','Pain','Orochimaru'],7:['Naruto','Kakashi','Sakura','Shikamaru','Itachi','Pain','Orochimaru']};
+ if(presets[n])return presets[n];
+ const pool=Object.keys(NARUTO_ROLES);
+ let roles=[...pool];
+ while(roles.length<n)roles.push(pool[roles.length%pool.length]);
+ roles=roles.slice(0,n);
+ if(!roles.some(r=>NARUTO_ROLES[r].team==='AKATSUKI'))roles[1]='Pain';
+ return roles.sort(()=>Math.random()-.5);
+}
 function activeRoles(){return currentTheme()==='naruto'?NARUTO_ROLES:ROLES}
 let state={players:[],index:0,phase:'reveal',round:1,nightStep:0,nightVictim:null,protected:null,supportProtected:null,voteIndex:0,votes:{},blocked:null,chaosTargets:[],uses:{},voteChanges:0};
 let voiceEnabled=true,$=id=>document.getElementById(id);
@@ -43,13 +52,12 @@ function renderNames(){let n=+$('playerCount').textContent||8,box=$('namesBox');
 function updateRoleCount(){let n=document.querySelectorAll('.special-role:checked').length,e=$('roleCount');if(e)e.textContent=`${n} rôle${n>1?'s':''} spécial${n>1?'s':''} activé${n>1?'s':''}`}
 function randomRoles(){const roles=[...document.querySelectorAll('.special-role')];roles.forEach(r=>r.checked=false);const playerCount=+$('playerCount')?.textContent||8,max=Math.min(roles.length,Math.max(0,playerCount-2));for(let i=roles.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roles[i],roles[j]]=[roles[j],roles[i]]}const amount=Math.floor(Math.random()*(max+1));roles.slice(0,amount).forEach(r=>r.checked=true);updateRoleCount()}
 function setup(){applyTheme($('localTheme')?.value||'gamer');renderNames();document.querySelectorAll('.special-role').forEach(x=>x.checked=false);updateRoleCount();screen('setup')}
-function changePlayers(d){let e=$('playerCount'),nar=currentTheme()==='naruto';e.textContent=Math.max(nar?3:5,Math.min(nar?7:20,(+e.textContent||8)+d));renderNames();updateRoleCount()}
+function changePlayers(d){let e=$('playerCount'),nar=currentTheme()==='naruto';e.textContent=Math.max(nar?3:5,Math.min(20,(+e.textContent||8)+d));renderNames();updateRoleCount()}
 function launch(){
  const nar=currentTheme()==='naruto';applyTheme(nar?'naruto':'gamer');
  let names=[...document.querySelectorAll('#namesBox .name-input')].map(i=>i.value.trim());
  if(names.length<(nar?3:5))return alert(nar?'⚠️ Naruto se joue de 3 à 7 joueurs.':'⚠️ Il faut au moins 5 joueurs.');
- if(nar&&names.length>7)return alert('⚠️ Loup-Garou Naruto est prévu pour 3 à 7 joueurs.');
- if(names.some(n=>!n))return alert('⚠️ Tous les joueurs doivent avoir un pseudo.');
+  if(names.some(n=>!n))return alert('⚠️ Tous les joueurs doivent avoir un pseudo.');
  if(new Set(names.map(n=>n.toLowerCase())).size!==names.length)return alert('⚠️ Les pseudos doivent être différents.');
  if(nar){let roleNames=narutoRolesForCount(names.length);state={players:names.map((name,i)=>({name,role:NARUTO_ROLES[roleNames[i]],roleName:roleNames[i],alive:true})),index:0,phase:'reveal',round:1,nightStep:0,nightVictim:null,protected:null,supportProtected:null,voteIndex:0,votes:{},blocked:null,chaosTargets:[],uses:{},voteChanges:0,theme:'naruto'};state.players.forEach(p=>{state.uses[p.name]={power:false,double:false,block:false,sabotage:false,support:false,strategy:false,chaos:false}});showReveal();return}
  let selected=[...document.querySelectorAll('.special-role:checked')].map(x=>x.value);
