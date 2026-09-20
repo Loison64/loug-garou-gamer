@@ -134,21 +134,21 @@ function opts(exclude=''){return alive().filter(p=>p.name!==exclude).map(p=>`<op
 function blocked(name){return state.blocked===name}
 function nightStep(){let nar=state.theme==='naruto';if(nar)return narutoNightStep();let hacker=alive().find(p=>(nar?p.roleName==='Obito':p.roleName==='Hacker')&&!state.uses[p.name].block);let sab=alive().find(p=>(nar?false:p.roleName==='Saboteur')&&!state.uses[p.name].sabotage);let analyst=alive().find(p=>(nar?p.roleName==='Naruto':p.roleName==='Analyste')&&!state.uses[p.name].power);let support=alive().find(p=>(nar?p.roleName==='Kakashi':p.roleName==='Support')&&!state.uses[p.name].support);let wolf=alive().find(p=>nar?p.roleName==='Pain':p.roleName==='Loup Gamer');let traitor=nar?null:alive().find(p=>p.roleName==='Traître'&&state.round>=3);let healer=alive().find(p=>nar?p.roleName==='Sakura':p.roleName==='Healer');if(state.nightStep===0&&hacker){state.nightStep=1;hackerTurn(hacker);return}if(state.nightStep<=1&&sab){state.nightStep=2;saboteurTurn(sab);return}if(state.nightStep<=2&&analyst){state.nightStep=3;analystTurn(analyst);return}if(state.nightStep<=3&&support){state.nightStep=4;supportTurn(support);return}if(state.nightStep<=4&&(wolf||traitor)){state.nightStep=5;wolfTurn(wolf,traitor);return}if(state.nightStep<=5&&healer){state.nightStep=6;healTurn(healer);return}finishNight()}
 function narutoNightStep(){
- const order=['Obito','Naruto','Sasuke','Jiraiya','Kiba','Shino','Hinata','Sakura','Kakashi','Choji','Gamabunta','Tsunade','Temari','Gaara','Pain','Kisame','Deidara','Sasori','Kakuzu','Hidan','Zetsu','Orochimaru','Madara','Kabuto','Kaguya','Kurama'];
- const active=order.find(r=>alive().some(p=>p.roleName===r)&&!state.uses[alive().find(p=>p.roleName===r).name].power&&!blocked(alive().find(p=>p.roleName===r).name));
+ const order=['Obito','Naruto','Sasuke','Jiraiya','Kiba','Shino','Hinata','Sakura','Kakashi','Choji','Gamabunta','Tsunade','Temari','Gaara','Rock Lee','Might Guy','Pain','Kisame','Deidara','Sasori','Kakuzu','Hidan','Zetsu','Traître'];
+ const active=order.find(r=>alive().some(p=>p.roleName===r)&&((r!=='Traître'&&r!=='Pain')||state.round>=3)&&!state.uses[alive().find(p=>p.roleName===r).name].power&&!blocked(alive().find(p=>p.roleName===r).name));
  if(!active)return finishNight();
  const p=alive().find(x=>x.roleName===active);
  const once=['Jiraiya','Kiba','Shino','Hinata','Rock Lee','Might Guy','Temari','Kisame','Deidara','Sasori','Kakuzu','Hidan','Zetsu','Orochimaru','Madara','Kabuto','Kaguya','Kurama'].includes(active);
  const targetRoles=['Naruto','Sasuke','Jiraiya','Kiba','Shino','Hinata','Sakura','Kakashi','Choji','Gamabunta','Tsunade','Temari','Gaara','Pain','Kisame','Deidara','Sasori','Kakuzu','Hidan','Zetsu','Orochimaru','Madara','Kabuto','Kaguya','Kurama'];
- const title={Obito:'🌀 Obito',Naruto:'🍥 Naruto',Sasuke:'⚡ Sasuke',Jiraiya:'🐸 Jiraiya',Kiba:'🐺 Kiba',Shino:'🪲 Shino',Hinata:'👁️ Hinata',Sakura:'🌸 Sakura',Kakashi:'👁️ Kakashi',Choji:'🍖 Choji',Gamabunta:'🐸 Gamabunta',Tsunade:'💚 Tsunade',Temari:'🌪️ Temari',Gaara:'🏜️ Gaara',Pain:'☁️ Pain',Kisame:'🦈 Kisame',Deidara:'💥 Deidara',Sasori:'🦂 Sasori',Kakuzu:'💰 Kakuzu',Hidan:'🔴 Hidan',Zetsu:'🌿 Zetsu',Orochimaru:'🐍 Orochimaru',Madara:'🔴 Madara',Kabuto:'🧪 Kabuto',Kaguya:'🌙 Kaguya',Kurama:'🦊 Kurama'}[active];
- const targetable=!['Pain','Obito'].includes(active);
+ const title={Obito:'🌀 Obito',Naruto:'🍥 Naruto',Sasuke:'⚡ Sasuke',Jiraiya:'🐸 Jiraiya',Kiba:'🐺 Kiba',Shino:'🪲 Shino',Hinata:'👁️ Hinata',Sakura:'🌸 Sakura',Kakashi:'👁️ Kakashi',Choji:'🍖 Choji',Gamabunta:'🐸 Gamabunta',Tsunade:'💚 Tsunade',Temari:'🌪️ Temari',Gaara:'🏜️ Gaara',Pain:'☁️ Pain',Traître:'🗡️ Traître',Kisame:'🦈 Kisame',Deidara:'💥 Deidara',Sasori:'🦂 Sasori',Kakuzu:'💰 Kakuzu',Hidan:'🔴 Hidan',Zetsu:'🌿 Zetsu',Orochimaru:'🐍 Orochimaru',Madara:'🔴 Madara',Kabuto:'🧪 Kabuto',Kaguya:'🌙 Kaguya',Kurama:'🦊 Kurama'}[active];
+ const targetable=true;
  $('gameMessage').textContent=title+' agit dans l’ombre.';render([p.name]);
  let desc=p.role.desc, optsHtml=targetable?'<select id="narTarget"><option value="">Choisir une cible</option>'+opts(p.name)+'</select>':'';
  $('actionArea').innerHTML=voice()+`<div class="night-card"><h3>${title}</h3><p>${esc(desc)}</p>${active==='Obito'?'<select id="narTarget"><option value="">Choisir un joueur à bloquer</option>'+opts(p.name)+'</select>':optsHtml}<button class="primary" id="narConfirm">⚡ Utiliser le pouvoir</button><button class="secondary" id="narSkip">Passer</button></div>`;
  bindVoice();speak(title+' utilise son pouvoir.');
  $('narSkip').onclick=()=>{state.uses[p.name].power=true;nightStep()};
  $('narConfirm').onclick=()=>{let t=$('narTarget')?.value||'';if(active!=='Pain'&&!t)return alert('⚠️ Choisis une cible.');state.uses[p.name].power=true;
-   if(active==='Pain')state.nightVictim=t||opts(p.name).match(/value="([^"]+)/)?.[1];
+   if(active==='Pain'||active==='Traître')state.nightVictim=t;
    else if(['Sakura','Kakashi','Choji','Gamabunta','Tsunade'].includes(active))state.protected=t;
    else if(active==='Obito')state.blocked=t;
    else if(['Kisame','Hidan'].includes(active))state.narutoActions[active]={target:t};
