@@ -8,7 +8,7 @@
 </head>
 <body>
 <main class="app">
-<section id="home" class="screen active"><div class="card center"><div class="logo">🐺</div><p class="eyebrow">JEU DE BLUFF</p><h1>Loup-Garou Gamer</h1><p class="subtitle">Choisis ton mode de jeu.</p><button id="startBtn" class="primary">📱 Mode local</button><button id="onlineBtn" class="secondary">🌐 Mode en ligne</button></div></section>
+<section id="home" class="screen active"><div class="card center"><div class="logo">🐺</div><p class="eyebrow">JEU DE BLUFF</p><h1>Loup-Garou Gamer</h1><p class="subtitle">Choisis ton mode de jeu.</p><button id="startBtn" class="primary">📱 Mode local</button><button id="onlineBtn" type="button" class="secondary" onclick="document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('online').classList.add('active')">🌐 Mode en ligne</button></div></section>
 <section id="online" class="screen"><div class="card center"><button class="back" data-screen="home">← Retour</button><div class="logo">🌐</div><p class="eyebrow">MODE EN LIGNE</p><h2>Jouer en ligne</h2><p class="subtitle">Une vraie partie entre plusieurs appareils.</p><button id="createOnlineBtn" class="primary">➕ Créer une partie</button><button id="joinOnlineBtn" class="secondary">🔗 Rejoindre une partie</button></div></section>
 <section id="onlineCreate" class="screen"><div class="card center"><button class="back" data-screen="online">← Retour</button><div class="logo">➕</div><p class="eyebrow">CRÉER UNE PARTIE</p><h2>Créer une partie</h2><input id="createPseudo" class="name-input" maxlength="20" placeholder="Ton pseudo"><button id="createRoomBtn" class="primary">🎮 Créer le salon</button><p id="onlineStatus" class="hint">Connexion P2P sécurisée</p></div></section>
 <section id="onlineLobby" class="screen"><div class="card"><div class="game-top"><div><p class="eyebrow">SALON EN LIGNE</p><h2>En attente des joueurs</h2></div><div class="badge">Code : <b id="roomCodeDisplay">------</b></div></div><p class="hint">Partage exactement ce code avec tes amis.</p><div id="lobbyPlayers" class="players"></div><button id="lobbyOptionsBtn" class="secondary">⚙️ Options</button><button id="startOnlineGameBtn" class="primary">▶️ Lancer la partie</button></div></section>
@@ -22,7 +22,7 @@
 <section id="end" class="screen"><div class="card center end-card"><div id="winnerIcon" class="winner-icon">🏆</div><p class="eyebrow">FIN DE LA PARTIE</p><h2 id="winnerTitle">Victoire !</h2><p id="winnerMessage" class="subtitle"></p><div id="finalPlayers" class="final-players"></div><button id="restartBtn" class="primary">🔄 Nouvelle partie</button></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js?v=7"></script>
-<script src="supabase-online.js?v=1"></script>
+<script src="script.js?v=8"></script>
+<script src="supabase-online.js?v=2"></script>
 </body>
 </html>
