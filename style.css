@@ -46,3 +46,100 @@
 .local-role-visual,.role-card-visual{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
 .local-role-visual::before,.local-role-visual::after,.role-card-visual::before,.role-card-visual::after{display:none!important;content:none!important}
 .local-role-visual .card-image,.role-card-visual .card-image{border:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important}
+
+/* ===== GAMING UI UPGRADE ===== */
+:root{
+  --bg:#05060d;--panel:rgba(10,13,25,.88);--panel2:rgba(18,21,39,.82);
+  --violet:#8d78ff;--pink:#ff3bd4;--cyan:#27d7ff;--red:#ff315a;
+  --line:#343a63;--text:#f7f8ff;--muted:#9ea8ca;
+}
+html{background:#05060d}
+body{
+  overflow-x:hidden;
+  background:
+    radial-gradient(circle at 50% -10%,#33256d 0%,transparent 32%),
+    radial-gradient(circle at 100% 35%,#151d4a 0%,transparent 28%),
+    radial-gradient(circle at 0% 75%,#30103b 0%,transparent 25%),
+    linear-gradient(#05060d,#090b16 55%,#05060d);
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.13;
+  background-image:linear-gradient(rgba(141,120,255,.25) 1px,transparent 1px),linear-gradient(90deg,rgba(39,215,255,.18) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,black,transparent 85%);
+}
+body:after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:20;opacity:.035;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,#fff 4px);
+}
+.app{position:relative;z-index:1;max-width:1050px}
+.screen.active{animation:screenIn .45s cubic-bezier(.2,.8,.2,1)}
+.card{
+  position:relative;overflow:hidden;
+  border:1px solid #454b79;
+  border-radius:28px;
+  background:linear-gradient(145deg,rgba(18,21,39,.94),rgba(7,9,18,.96));
+  box-shadow:0 0 0 1px #8d78ff12,0 25px 90px #000b,0 0 70px #6c5cff14;
+}
+.card:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(120deg,transparent 0 35%,rgba(141,120,255,.07) 50%,transparent 65%);
+  transform:translateX(-100%);animation:panelSweep 7s ease-in-out infinite;
+}
+.card>*{position:relative;z-index:1}
+.logo{font-size:78px;filter:drop-shadow(0 0 18px #8d78ff);animation:logoPulse 2.8s ease-in-out infinite}
+.eyebrow{color:#b9b2ff;text-shadow:0 0 16px #8d78ff66}
+h1,h2{letter-spacing:-.03em;text-shadow:0 0 30px #8d78ff22}
+.subtitle,.hint{color:#b5bdd8}
+.primary,.secondary,.back,.counter button,.role-option,.player,.message,.action,.vote-card,.special-box,.name-row{
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,background .2s ease;
+}
+.primary{
+  position:relative;overflow:hidden;
+  border:1px solid #b39dff;
+  background:linear-gradient(100deg,#654cff,#a832ff 52%,#ff36c8);
+  box-shadow:0 0 25px #8d78ff33,inset 0 1px #fff5;
+  text-transform:uppercase;letter-spacing:.04em;
+}
+.primary:before{
+  content:"";position:absolute;top:0;left:-80%;width:45%;height:100%;
+  background:linear-gradient(90deg,transparent,#fff8,transparent);transform:skewX(-20deg);
+  animation:buttonShine 4s infinite;
+}
+.primary:hover{transform:translateY(-2px);box-shadow:0 0 35px #a45cff66,0 10px 30px #0008}
+.primary:active{transform:translateY(1px) scale(.99)}
+.secondary{
+  border:1px solid #3e4670;background:linear-gradient(135deg,#202641,#151a2e);
+  box-shadow:0 8px 25px #0005;
+}
+.secondary:hover{transform:translateY(-2px);border-color:#7165c7;box-shadow:0 0 25px #6c5cff2b}
+.back:hover{color:#fff;text-shadow:0 0 15px #8d78ff;transform:translateX(-3px)}
+.name-input,.action select{
+  border-color:#3d466e!important;background:#080b16!important;
+  box-shadow:inset 0 0 20px #0008;
+}
+.name-input:focus{border-color:#9c8cff!important;box-shadow:0 0 0 2px #8d78ff33,0 0 25px #8d78ff1c!important}
+.special-box{background:linear-gradient(145deg,#18162f,#0d1120);border-color:#424970;box-shadow:inset 0 0 40px #8d78ff08}
+.role-option{background:linear-gradient(135deg,#151a2b,#0d1120);border-color:#30385b}
+.role-option:hover{transform:translateX(4px);border-color:#786be0;box-shadow:0 0 20px #6c5cff22}
+.role-option:has(input:checked){box-shadow:0 0 22px #8d78ff22,inset 0 0 25px #8d78ff0b}
+.players{gap:14px}
+.player{background:linear-gradient(145deg,#171c31,#0c1020);border-color:#30385b;box-shadow:0 8px 25px #0005}
+.player:hover{transform:translateY(-3px);border-color:#5c66a0;box-shadow:0 12px 30px #0008}
+.player.active{border-color:#9c8cff;box-shadow:0 0 0 1px #9c8cff,0 0 30px #8d78ff44}
+.player.dead{filter:grayscale(.8)}
+.message,.action{background:linear-gradient(145deg,#12172a,#090d19);border-color:#343c60;box-shadow:inset 0 0 30px #0005}
+.vote-card{box-shadow:0 15px 35px #0007;border-color:#554a87}
+.vote-result{background:#101528;border-color:#30385b}
+.end-card{box-shadow:0 0 0 1px #8d78ff18,0 0 80px #8d78ff18,0 30px 100px #000b}
+.winner-icon{filter:drop-shadow(0 0 25px #ff3bd4)}
+.team{box-shadow:0 0 18px #8d78ff1c;border:1px solid #454c73}
+@keyframes screenIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes panelSweep{0%,65%,100%{transform:translateX(-100%)}78%{transform:translateX(120%)}}
+@keyframes buttonShine{0%,65%{left:-80%}80%,100%{left:140%}}
+@keyframes logoPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 16px #8d78ff)}50%{transform:scale(1.04);filter:drop-shadow(0 0 30px #ff3bd466)}}
+@media(max-width:600px){
+  .card{border-radius:20px}
+  .logo{font-size:62px}
+  .primary,.secondary{padding:14px 16px}
+}
