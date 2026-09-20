@@ -27,3 +27,14 @@
 .card-image{display:block;width:min(100%,520px);height:auto;max-height:62vh;aspect-ratio:3/4;object-fit:contain;object-position:center;margin:0 auto;border-radius:18px;border:2px solid #5b4da0;background:#080914;box-shadow:0 20px 60px #0009}
 .role-card-visual,.local-role-visual{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:visible}
 .card-image-back,.card-image-front{max-width:520px}
+
+/* Mise en page révélation : la carte ne chevauche plus les infos */
+.local-role-visual,.role-card-visual{position:relative;z-index:2;margin:0 auto 28px!important;padding:0!important}
+.local-role-visual .card-image,.role-card-visual .card-image{position:relative;z-index:3}
+#roleCard>.role-icon,#roleCard>#roleName,#roleCard>#roleTeam,#roleCard>#roleDescription{position:relative;z-index:1}
+#roleCard>#roleName{display:block;margin-top:10px}
+#roleCard>#roleTeam{display:block;margin-top:10px}
+#roleCard>#roleDescription{display:block;margin-top:22px}
+.role-reveal .role-info{position:relative;z-index:1;margin-top:24px}
+.role-reveal #onlineRevealCard,.role-reveal #onlineMissionBox{position:relative;z-index:1;margin-top:20px}
+.card-flip-hint{position:relative;z-index:1;margin:10px 0 0!important}
