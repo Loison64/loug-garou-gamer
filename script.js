@@ -16,6 +16,21 @@ const ROLES={
 'Boss Final':{icon:'👑',team:'SOLO',desc:'Gagne s’il devient le dernier joueur vivant.'},
 'Traître':{icon:'🗡️',team:'BONS',desc:'Commence BON puis rejoint les HACKERS à partir du tour 3.'}
 };
+const NARUTO_ROLES={
+'Naruto':{icon:'🍥',team:'BONS',desc:'Voyant : chaque nuit, découvre le camp d’un joueur.'},
+'Sasuke':{icon:'⚡',team:'BONS',desc:'Enquêteur : découvre si un joueur possède un pouvoir actif.'},
+'Sakura':{icon:'🌸',team:'BONS',desc:'Médecin : protège un joueur pendant la nuit.'},
+'Kakashi':{icon:'👁️',team:'BONS',desc:'Gardien : protège un joueur pendant la nuit.'},
+'Jiraiya':{icon:'🐸',team:'BONS',desc:'Informateur : une fois par partie, enquête sur un joueur.'},
+'Shikamaru':{icon:'🧠',team:'BONS',desc:'Stratège : peut annuler une élimination par vote une fois.'},
+'Itachi':{icon:'👁️',team:'AKATSUKI',desc:'Illusionniste : peut falsifier une information une fois.'},
+'Pain':{icon:'☁️',team:'AKATSUKI',desc:'Chef : choisit chaque nuit la victime de l’Akatsuki.'},
+'Obito':{icon:'🌀',team:'AKATSUKI',desc:'Manipulateur : bloque le pouvoir d’un joueur une fois.'},
+'Orochimaru':{icon:'🐍',team:'SOLO',desc:'Expérimentateur : accomplit sa mission personnelle.'}
+};
+function currentTheme(){return $('localTheme')?.value||'gamer'}
+function narutoRolesForCount(n){const presets={3:['Naruto','Pain','Orochimaru'],4:['Naruto','Kakashi','Itachi','Orochimaru'],5:['Naruto','Sakura','Kakashi','Itachi','Pain'],6:['Naruto','Sakura','Shikamaru','Itachi','Pain','Orochimaru'],7:['Naruto','Kakashi','Sakura','Shikamaru','Itachi','Pain','Orochimaru']};return presets[n]||presets[7]}
+function activeRoles(){return currentTheme()==='naruto'?NARUTO_ROLES:ROLES}
 let state={players:[],index:0,phase:'reveal',round:1,nightStep:0,nightVictim:null,protected:null,supportProtected:null,voteIndex:0,votes:{},blocked:null,chaosTargets:[],uses:{},voteChanges:0};
 let voiceEnabled=true,$=id=>document.getElementById(id);
 const esc=v=>String(v).replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));
@@ -27,12 +42,15 @@ function renderNames(){let n=+$('playerCount').textContent||8,box=$('namesBox');
 function updateRoleCount(){let n=document.querySelectorAll('.special-role:checked').length,e=$('roleCount');if(e)e.textContent=`${n} rôle${n>1?'s':''} spécial${n>1?'s':''} activé${n>1?'s':''}`}
 function randomRoles(){const roles=[...document.querySelectorAll('.special-role')];roles.forEach(r=>r.checked=false);const playerCount=+$('playerCount')?.textContent||8,max=Math.min(roles.length,Math.max(0,playerCount-2));for(let i=roles.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roles[i],roles[j]]=[roles[j],roles[i]]}const amount=Math.floor(Math.random()*(max+1));roles.slice(0,amount).forEach(r=>r.checked=true);updateRoleCount()}
 function setup(){renderNames();document.querySelectorAll('.special-role').forEach(x=>x.checked=false);updateRoleCount();screen('setup')}
-function changePlayers(d){let e=$('playerCount');e.textContent=Math.max(5,Math.min(20,(+e.textContent||8)+d));renderNames();updateRoleCount()}
+function changePlayers(d){let e=$('playerCount'),nar=currentTheme()==='naruto';e.textContent=Math.max(nar?3:5,Math.min(nar?7:20,(+e.textContent||8)+d));renderNames();updateRoleCount()}
 function launch(){
+ const nar=currentTheme()==='naruto';
  let names=[...document.querySelectorAll('#namesBox .name-input')].map(i=>i.value.trim());
- if(names.length<5)return alert('⚠️ Il faut au moins 5 joueurs.');
+ if(names.length<(nar?3:5))return alert(nar?'⚠️ Naruto se joue de 3 à 7 joueurs.':'⚠️ Il faut au moins 5 joueurs.');
+ if(nar&&names.length>7)return alert('⚠️ Loup-Garou Naruto est prévu pour 3 à 7 joueurs.');
  if(names.some(n=>!n))return alert('⚠️ Tous les joueurs doivent avoir un pseudo.');
  if(new Set(names.map(n=>n.toLowerCase())).size!==names.length)return alert('⚠️ Les pseudos doivent être différents.');
+ if(nar){let roleNames=narutoRolesForCount(names.length);state={players:names.map((name,i)=>({name,role:NARUTO_ROLES[roleNames[i]],roleName:roleNames[i],alive:true})),index:0,phase:'reveal',round:1,nightStep:0,nightVictim:null,protected:null,supportProtected:null,voteIndex:0,votes:{},blocked:null,chaosTargets:[],uses:{},voteChanges:0,theme:'naruto'};state.players.forEach(p=>{state.uses[p.name]={power:false,double:false,block:false,sabotage:false,support:false,strategy:false,chaos:false}});showReveal();return}
  let selected=[...document.querySelectorAll('.special-role:checked')].map(x=>x.value);
  if(selected.length>names.length-2)return alert(`⚠️ Trop de rôles spéciaux. Avec ${names.length} joueurs, choisis au maximum ${names.length-2}.`);
  let roleNames=['Loup Gamer','Healer'];
