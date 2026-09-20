@@ -41,3 +41,8 @@
 
 /* Révélation propre : carte puis informations, sans chevauchement */
 #roleCard{overflow:visible!important}.local-role-visual{width:100%;margin:0 auto 24px!important}.local-role-info{width:100%;margin-top:26px!important;padding-top:4px}.local-role-info h3{margin:14px 0 8px!important}.local-role-info p{margin:20px 0!important}.local-role-info .team{margin:0 0 6px!important}.card-image{max-height:52vh!important;min-height:280px}.card-flip-hint{margin:10px 0 0!important}
+
+/* Révélation : retirer les cadres décoratifs autour de la carte */
+.local-role-visual,.role-card-visual{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+.local-role-visual::before,.local-role-visual::after,.role-card-visual::before,.role-card-visual::after{display:none!important;content:none!important}
+.local-role-visual .card-image,.role-card-visual .card-image{border:0!important;box-shadow:none!important;border-radius:0!important;background:transparent!important}
