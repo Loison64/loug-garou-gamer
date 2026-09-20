@@ -19,3 +19,5 @@
 .card-flip-hint{margin-top:12px;color:#aeb6d0;font-size:13px;font-weight:800}
 .role-info.reveal-hidden{opacity:.35;filter:blur(6px);pointer-events:none;transition:.35s}
 .role-info.reveal-visible{opacity:1;filter:none;pointer-events:auto;transition:.35s}
+
+#roleCard>.primary{margin-top:8px}.local-role-visual{overflow:visible!important}.local-role-visual .card-flip{margin:auto}.local-role-visual .card-flip-hint{text-align:center}
