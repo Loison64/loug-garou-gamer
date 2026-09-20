@@ -148,3 +148,125 @@ h1,h2{letter-spacing:-.03em;text-shadow:0 0 30px #8d78ff22}
 
 /* Univers Naruto */
 .naruto-card-art{max-width:430px;margin:0 auto;padding:42px 28px;border:1px solid #8d78ff;border-radius:24px;background:radial-gradient(circle at 50% 20%,#4a176f,#101225 55%,#070910);box-shadow:0 0 45px #8d78ff44, inset 0 0 45px #ff6a0020;text-align:center}.naruto-card-icon{font-size:78px;filter:drop-shadow(0 0 18px #ff8a00)}.naruto-card-title{font-size:38px;font-weight:1000;text-transform:uppercase;text-shadow:0 0 20px #ff7b00}.naruto-card-team{display:inline-block;margin:15px 0;padding:8px 18px;border-radius:99px;background:#201a3d;border:1px solid #8d78ff;font-weight:900}.naruto-card-desc{color:#cbd2ea;line-height:1.6;font-size:16px}
+
+/* =========================================================
+   THÈME NARUTO — remplacement visuel complet
+   ========================================================= */
+body[data-theme="naruto"],html[data-theme="naruto"]{
+  --bg:#090705;--panel:rgba(27,12,8,.94);--panel2:rgba(43,18,10,.9);
+  --violet:#ff7a18;--pink:#ffb000;--cyan:#ffe08a;--line:#6d2815;
+  --text:#fff7e8;--muted:#d8bfa4;
+}
+html[data-theme="naruto"]{background:#080604}
+body[data-theme="naruto"]{
+  background:
+    radial-gradient(circle at 50% -15%,#7d240d 0,transparent 32%),
+    radial-gradient(circle at 8% 35%,#42150d 0,transparent 27%),
+    radial-gradient(circle at 92% 70%,#51200b 0,transparent 25%),
+    linear-gradient(145deg,#080604 0%,#180b07 48%,#070504 100%);
+  font-family:Georgia,"Trebuchet MS",sans-serif;
+}
+body[data-theme="naruto"]:before{
+  opacity:.16;
+  background-image:
+    linear-gradient(rgba(255,125,30,.16) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,190,50,.10) 1px,transparent 1px);
+  background-size:54px 54px;
+  mask-image:radial-gradient(circle at center,black,transparent 82%);
+}
+body[data-theme="naruto"]:after{
+  opacity:.025;
+  background:repeating-linear-gradient(0deg,transparent 0 5px,#ffb347 6px);
+}
+body[data-theme="naruto"] .card{
+  border:2px solid #7d3a20;
+  border-radius:18px;
+  background:
+    linear-gradient(135deg,rgba(48,20,11,.97),rgba(15,8,5,.98)),
+    repeating-linear-gradient(45deg,transparent 0 10px,#ff7a1808 11px 12px);
+  box-shadow:0 18px 80px #000d,0 0 55px #ff5a1518,inset 0 0 50px #ff7a1808;
+}
+body[data-theme="naruto"] .card:before{
+  background:linear-gradient(120deg,transparent 0 35%,rgba(255,122,24,.10) 50%,transparent 65%);
+}
+body[data-theme="naruto"] .logo{
+  filter:drop-shadow(0 0 20px #ff5a18);
+  animation:narutoPulse 2.4s ease-in-out infinite;
+}
+body[data-theme="naruto"] .eyebrow{
+  color:#ffb45c;text-shadow:0 0 18px #ff5a18;
+  letter-spacing:.18em;
+}
+body[data-theme="naruto"] h1,body[data-theme="naruto"] h2,body[data-theme="naruto"] h3{
+  font-family:Georgia,"Trebuchet MS",sans-serif;
+  text-shadow:0 3px 0 #3b1108,0 0 24px #ff6a1833;
+}
+body[data-theme="naruto"] .primary{
+  border-color:#ffb347;
+  background:linear-gradient(100deg,#8e210c,#d84b0d 48%,#ff9d16);
+  box-shadow:0 0 25px #ff5a1838,inset 0 1px #fff7;
+}
+body[data-theme="naruto"] .primary:hover{
+  box-shadow:0 0 38px #ff6a1866,0 10px 30px #0009;
+}
+body[data-theme="naruto"] .secondary{
+  border-color:#74331f;
+  background:linear-gradient(135deg,#3b190f,#1c0c08);
+}
+body[data-theme="naruto"] .secondary:hover{
+  border-color:#d06431;box-shadow:0 0 25px #ff6a1830;
+}
+body[data-theme="naruto"] .name-input,
+body[data-theme="naruto"] .action select{
+  border-color:#71311d!important;background:#100806!important;
+  color:#fff4df!important;
+  box-shadow:inset 0 0 22px #000a;
+}
+body[data-theme="naruto"] .special-box,
+body[data-theme="naruto"] .message,
+body[data-theme="naruto"] .action,
+body[data-theme="naruto"] .vote-card{
+  background:linear-gradient(145deg,#32150d,#130907);
+  border-color:#71311d;
+}
+body[data-theme="naruto"] .role-option,
+body[data-theme="naruto"] .player{
+  background:linear-gradient(145deg,#32150f,#160a07);
+  border-color:#68301e;
+}
+body[data-theme="naruto"] .role-option:hover,
+body[data-theme="naruto"] .player:hover{
+  border-color:#e06a2f;box-shadow:0 0 24px #ff5a1826;
+}
+body[data-theme="naruto"] .player.active{
+  border-color:#ffad48;
+  box-shadow:0 0 0 1px #ffad48,0 0 30px #ff5a1844;
+}
+body[data-theme="naruto"] .badge,
+body[data-theme="naruto"] .team{
+  background:#35150d;border-color:#8a4124;
+  box-shadow:0 0 18px #ff6a181f;
+}
+body[data-theme="naruto"] .naruto-card-art{
+  border:2px solid #d45a20;
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 50% 20%,#7d250d,#32120b 48%,#0c0705 100%);
+  box-shadow:0 0 50px #ff5a1844,inset 0 0 55px #ff9d1618;
+}
+body[data-theme="naruto"] .naruto-card-title{
+  color:#fff3d2;
+  text-shadow:0 2px 0 #5a1709,0 0 22px #ff6a18;
+}
+body[data-theme="naruto"] .naruto-card-team{
+  color:#ffd38a;background:#32130b;border-color:#c55b25;
+}
+body[data-theme="naruto"] .naruto-card-desc{color:#f0d8bc}
+body[data-theme="naruto"] .winner-icon{filter:drop-shadow(0 0 28px #ff5a18)}
+@keyframes narutoPulse{
+  0%,100%{transform:scale(1);filter:drop-shadow(0 0 16px #ff5a18)}
+  50%{transform:scale(1.05);filter:drop-shadow(0 0 32px #ff9d16)}
+}
+@media(max-width:600px){
+  body[data-theme="naruto"] .card{border-radius:14px}
+}
