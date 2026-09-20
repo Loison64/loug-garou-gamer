@@ -270,3 +270,20 @@ body[data-theme="naruto"] .winner-icon{filter:drop-shadow(0 0 28px #ff5a18)}
 @media(max-width:600px){
   body[data-theme="naruto"] .card{border-radius:14px}
 }
+
+
+/* ===== FOND NARUTO KONOHA ===== */
+body[data-theme="naruto"]{
+  background:
+    linear-gradient(rgba(5,3,2,.18),rgba(5,3,2,.42)),
+    url("https://abrakadabra.fun/uploads/posts/2022-03/1648738923_6-abrakadabra-fun-p-kak-viglyadit-konokha-8.jpg") center center / cover fixed no-repeat;
+}
+body[data-theme="naruto"]::before{
+  opacity:.08;
+  background-image:linear-gradient(rgba(255,180,70,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(255,180,70,.08) 1px,transparent 1px);
+  background-size:54px 54px;
+}
+body[data-theme="naruto"]::after{
+  background:linear-gradient(rgba(10,5,2,.05),rgba(10,5,2,.28));
+  opacity:1;
+}
