@@ -20,14 +20,51 @@ const NARUTO_ROLES={
 'Naruto':{icon:'🍥',team:'BONS',desc:'Voyant : chaque nuit, découvre le camp d’un joueur.'},
 'Sasuke':{icon:'⚡',team:'BONS',desc:'Enquêteur : découvre si un joueur possède un pouvoir actif.'},
 'Sakura':{icon:'🌸',team:'BONS',desc:'Médecin : protège un joueur pendant la nuit.'},
-'Kakashi':{icon:'👁️',team:'BONS',desc:'Gardien : protège un joueur pendant la nuit.'},
 'Jiraiya':{icon:'🐸',team:'BONS',desc:'Informateur : une fois par partie, enquête sur un joueur.'},
+'Kakashi':{icon:'👁️',team:'BONS',desc:'Gardien : protège un joueur pendant la nuit.'},
+'Kiba':{icon:'🐺',team:'BONS',desc:'Pisteur : peut suivre la trace d’un joueur.'},
 'Shikamaru':{icon:'🧠',team:'BONS',desc:'Stratège : peut annuler une élimination par vote une fois.'},
-'Itachi':{icon:'👁️',team:'AKATSUKI',desc:'Illusionniste : peut falsifier une information une fois.'},
+'Choji':{icon:'🍖',team:'BONS',desc:'Protecteur : protège un joueur pendant la nuit.'},
+'Shino':{icon:'🪲',team:'BONS',desc:'Observateur : observe l’activité d’un joueur.'},
+'Hinata':{icon:'👁️',team:'BONS',desc:'Sentinelle : surveille un joueur pendant la nuit.'},
+'Rock Lee':{icon:'🥋',team:'BONS',desc:'Duelliste : peut provoquer un duel une fois par partie.'},
+'Might Guy':{icon:'🔥',team:'BONS',desc:'Mentor : renforce le pouvoir d’un allié une fois.'},
+'Gamabunta':{icon:'🐸',team:'BONS',desc:'Protecteur : protège un joueur pendant la nuit.'},
+'Tsunade':{icon:'💚',team:'BONS',desc:'Grande soigneuse : peut sauver un joueur une fois.'},
+'Temari':{icon:'🌪️',team:'BONS',desc:'Éclaireuse : obtient une information sur un joueur.'},
+'Gaara':{icon:'🏜️',team:'BONS',desc:'Défenseur : peut survivre à une attaque une fois.'},
 'Pain':{icon:'☁️',team:'AKATSUKI',desc:'Chef : choisit chaque nuit la victime de l’Akatsuki.'},
 'Obito':{icon:'🌀',team:'AKATSUKI',desc:'Manipulateur : bloque le pouvoir d’un joueur une fois.'},
-'Orochimaru':{icon:'🐍',team:'SOLO',desc:'Expérimentateur : accomplit sa mission personnelle.'}
+'Itachi':{icon:'👁️',team:'AKATSUKI',desc:'Illusionniste : peut falsifier une information une fois.'},
+'Kisame':{icon:'🦈',team:'AKATSUKI',desc:'Chasseur : peut éliminer une cible une fois par partie.'},
+'Deidara':{icon:'💥',team:'AKATSUKI',desc:'Saboteur : déclenche un faux événement une fois.'},
+'Sasori':{icon:'🦂',team:'AKATSUKI',desc:'Marionnettiste : peut manipuler une action une fois.'},
+'Kakuzu':{icon:'💰',team:'AKATSUKI',desc:'Survivant : résiste à une élimination une fois.'},
+'Hidan':{icon:'🔴',team:'AKATSUKI',desc:'Vengeur : peut éliminer celui qui l’élimine.'},
+'Zetsu':{icon:'🌿',team:'AKATSUKI',desc:'Espion : observe secrètement les actions.'},
+'Orochimaru':{icon:'🐍',team:'SOLO',desc:'Expérimentateur : accomplit sa mission personnelle.'},
+'Madara':{icon:'🔴',team:'SOLO',desc:'Conquérant : doit devenir le dernier camp dominant.'},
+'Kabuto':{icon:'🧪',team:'SOLO',desc:'Médecin noir : accomplit sa condition secrète.'},
+'Kaguya':{icon:'🌙',team:'SOLO',desc:'Déesse : doit survivre jusqu’à la fin.'},
+'Kurama':{icon:'🦊',team:'SOLO',desc:'Instinct : accomplit sa condition personnelle.'},
+'Traître':{icon:'🗡️',team:'BONS',desc:'Commence dans le Village puis rejoint secrètement l’Akatsuki au tour 3.'}
 };
+function renderThemeRoleOptions(){
+ const nar=currentTheme()==='naruto';
+ const box=document.querySelector('#setup .special-box');
+ if(!box)return;
+ if(nar){
+   const groups=[
+    ['🍥 VILLAGE',['Naruto','Sasuke','Sakura','Jiraiya','Kakashi','Kiba','Shikamaru','Choji','Shino','Hinata','Rock Lee','Might Guy','Gamabunta','Tsunade','Temari','Gaara']],
+    ['☁️ AKATSUKI',['Pain','Obito','Itachi','Kisame','Deidara','Sasori','Kakuzu','Hidan','Zetsu']],
+    ['🎭 SOLOS',['Orochimaru','Madara','Kabuto','Kaguya','Kurama']],
+    ['🗡️ SPÉCIAL',['Traître']]
+   ];
+   box.innerHTML='<h3>🍥 Rôles Naruto</h3><p class="hint">Les rôles sont distribués automatiquement selon le nombre de joueurs.</p>'+groups.map(g=>'<div class="role-group"><b>'+g[0]+'</b>'+g[1].map(r=>'<label class="role-option naruto-role-option"><span>'+NARUTO_ROLES[r].icon+' <b>'+r+'</b><small>'+NARUTO_ROLES[r].desc+'</small></span></label>').join('')+'</div>').join('');
+ }else{
+   location.reload();
+ }
+}
 function currentTheme(){return $('localTheme')?.value||'gamer'}
 function applyTheme(theme='gamer'){document.body.dataset.theme=theme;document.documentElement.dataset.theme=theme;document.title=theme==='naruto'?'Loup-Garou Naruto':'Loup-Garou Gamer'}
 function narutoRolesForCount(n){
@@ -51,7 +88,7 @@ function bindVoice(){let b=$('voiceBtn');if(b)b.onclick=()=>{voiceEnabled=!voice
 function renderNames(){let n=+$('playerCount').textContent||8,box=$('namesBox');box.innerHTML='';for(let i=1;i<=n;i++)box.insertAdjacentHTML('beforeend',`<div class="name-row"><label>👤 Joueur ${i}</label><input id="player-${i}" class="name-input" maxlength="20" placeholder="Entre ton pseudo" value="Joueur ${i}"></div>`)}
 function updateRoleCount(){let n=document.querySelectorAll('.special-role:checked').length,e=$('roleCount');if(e)e.textContent=`${n} rôle${n>1?'s':''} spécial${n>1?'s':''} activé${n>1?'s':''}`}
 function randomRoles(){const roles=[...document.querySelectorAll('.special-role')];roles.forEach(r=>r.checked=false);const playerCount=+$('playerCount')?.textContent||8,max=Math.min(roles.length,Math.max(0,playerCount-2));for(let i=roles.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roles[i],roles[j]]=[roles[j],roles[i]]}const amount=Math.floor(Math.random()*(max+1));roles.slice(0,amount).forEach(r=>r.checked=true);updateRoleCount()}
-function setup(){applyTheme($('localTheme')?.value||'gamer');renderNames();document.querySelectorAll('.special-role').forEach(x=>x.checked=false);updateRoleCount();screen('setup')}
+function setup(){applyTheme($('localTheme')?.value||'gamer');renderNames();document.querySelectorAll('.special-role').forEach(x=>x.checked=false);updateRoleCount();renderThemeRoleOptions();screen('setup')}
 function changePlayers(d){let e=$('playerCount'),nar=currentTheme()==='naruto';e.textContent=Math.max(nar?3:5,Math.min(20,(+e.textContent||8)+d));renderNames();updateRoleCount()}
 function launch(){
  const nar=currentTheme()==='naruto';applyTheme(nar?'naruto':'gamer');
