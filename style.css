@@ -38,3 +38,6 @@
 .role-reveal .role-info{position:relative;z-index:1;margin-top:24px}
 .role-reveal #onlineRevealCard,.role-reveal #onlineMissionBox{position:relative;z-index:1;margin-top:20px}
 .card-flip-hint{position:relative;z-index:1;margin:10px 0 0!important}
+
+/* Révélation propre : carte puis informations, sans chevauchement */
+#roleCard{overflow:visible!important}.local-role-visual{width:100%;margin:0 auto 24px!important}.local-role-info{width:100%;margin-top:26px!important;padding-top:4px}.local-role-info h3{margin:14px 0 8px!important}.local-role-info p{margin:20px 0!important}.local-role-info .team{margin:0 0 6px!important}.card-image{max-height:52vh!important;min-height:280px}.card-flip-hint{margin:10px 0 0!important}
