@@ -93,7 +93,7 @@ function changePlayers(d){let e=$('playerCount'),nar=currentTheme()==='naruto';e
 function launch(){
  const nar=currentTheme()==='naruto';applyTheme(nar?'naruto':'gamer');
  let names=[...document.querySelectorAll('#namesBox .name-input')].map(i=>i.value.trim());
- if(names.length<(nar?3:5))return alert(nar?'⚠️ Naruto se joue de 3 à 7 joueurs.':'⚠️ Il faut au moins 5 joueurs.');
+ if(names.length<(nar?3:5))return alert(nar?'⚠️ Naruto se joue de 3 à 20 joueurs.':'⚠️ Il faut au moins 5 joueurs.');
   if(names.some(n=>!n))return alert('⚠️ Tous les joueurs doivent avoir un pseudo.');
  if(new Set(names.map(n=>n.toLowerCase())).size!==names.length)return alert('⚠️ Les pseudos doivent être différents.');
  if(nar){let roleNames=narutoRolesForCount(names.length);state={players:names.map((name,i)=>({name,role:NARUTO_ROLES[roleNames[i]],roleName:roleNames[i],alive:true})),index:0,phase:'reveal',round:1,nightStep:0,nightVictim:null,protected:null,supportProtected:null,voteIndex:0,votes:{},blocked:null,chaosTargets:[],uses:{},voteChanges:0,theme:'naruto'};state.players.forEach(p=>{state.uses[p.name]={power:false,double:false,block:false,sabotage:false,support:false,strategy:false,chaos:false}});showReveal();return}
