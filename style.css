@@ -145,3 +145,6 @@ h1,h2{letter-spacing:-.03em;text-shadow:0 0 30px #8d78ff22}
 }
 
 .waiting-role{text-align:center;padding:60px 25px;border:1px solid #454b79;border-radius:24px;background:linear-gradient(145deg,#12172a,#090d19);box-shadow:0 0 40px #8d78ff18}.waiting-role .role-icon{font-size:70px;margin-bottom:20px}.waiting-role h2{margin:10px 0}.waiting-role p{color:#aeb7d4}
+
+/* Univers Naruto */
+.naruto-card-art{max-width:430px;margin:0 auto;padding:42px 28px;border:1px solid #8d78ff;border-radius:24px;background:radial-gradient(circle at 50% 20%,#4a176f,#101225 55%,#070910);box-shadow:0 0 45px #8d78ff44, inset 0 0 45px #ff6a0020;text-align:center}.naruto-card-icon{font-size:78px;filter:drop-shadow(0 0 18px #ff8a00)}.naruto-card-title{font-size:38px;font-weight:1000;text-transform:uppercase;text-shadow:0 0 20px #ff7b00}.naruto-card-team{display:inline-block;margin:15px 0;padding:8px 18px;border-radius:99px;background:#201a3d;border:1px solid #8d78ff;font-weight:900}.naruto-card-desc{color:#cbd2ea;line-height:1.6;font-size:16px}
