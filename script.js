@@ -70,12 +70,17 @@ function applyTheme(theme='gamer'){document.body.dataset.theme=theme;document.do
 function narutoRolesForCount(n){
  const presets={3:['Naruto','Pain','Orochimaru'],4:['Naruto','Kakashi','Itachi','Orochimaru'],5:['Naruto','Sakura','Kakashi','Itachi','Pain'],6:['Naruto','Sakura','Shikamaru','Itachi','Pain','Orochimaru'],7:['Naruto','Kakashi','Sakura','Shikamaru','Itachi','Pain','Orochimaru']};
  if(presets[n])return presets[n];
- const pool=Object.keys(NARUTO_ROLES);
- let roles=[...pool];
- while(roles.length<n)roles.push(pool[roles.length%pool.length]);
- roles=roles.slice(0,n);
- if(!roles.some(r=>NARUTO_ROLES[r].team==='AKATSUKI'))roles[1]='Pain';
- return roles.sort(()=>Math.random()-.5);
+ // Pour les grandes parties, garantir plusieurs vrais membres de l'Akatsuki.
+ const village=['Naruto','Sasuke','Sakura','Jiraiya','Kakashi','Kiba','Shikamaru','Choji','Shino','Hinata','Rock Lee','Might Guy','Gamabunta','Tsunade','Temari','Gaara'];
+ const akatsuki=['Pain','Obito','Itachi','Kisame','Deidara','Sasori','Kakuzu','Hidan','Zetsu'];
+ const solos=['Orochimaru','Madara','Kabuto','Kaguya','Kurama'];
+ const shuffled=a=>[...a].sort(()=>Math.random()-.5);
+ const evilCount=Math.min(akatsuki.length,Math.max(2,Math.floor(n/4)));
+ const soloCount=n>=8?1:0;
+ const roles=[...shuffled(akatsuki).slice(0,evilCount),...shuffled(solos).slice(0,soloCount)];
+ roles.push(...shuffled(village).slice(0,Math.max(0,n-roles.length)));
+ while(roles.length<n)roles.push(shuffled(village)[roles.length%village.length]);
+ return shuffled(roles.slice(0,n));
 }
 function activeRoles(){return currentTheme()==='naruto'?NARUTO_ROLES:ROLES}
 let state={players:[],index:0,phase:'reveal',round:1,nightStep:0,nightVictim:null,protected:null,supportProtected:null,voteIndex:0,votes:{},blocked:null,chaosTargets:[],uses:{},voteChanges:0};
