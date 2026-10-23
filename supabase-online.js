@@ -1,356 +1,443 @@
+/* =====================================================================
+   supabase-online.js — Mode en ligne (plusieurs appareils, via Supabase)
+
+   Principe anti-conflit :
+   - Seul l'HÔTE écrit l'état de la partie (table game_rooms, colonne state)
+     et la colonne alive des joueurs.
+   - Chaque joueur n'écrit QUE sa propre ligne (game_players.role_data.input) :
+     "prêt", action de nuit, vote, décision du Stratège, mission du Solo Player.
+   - L'hôte lit ces entrées et fait avancer la partie.
+   Les règles sont dans regles.js (window.LG).
+   ===================================================================== */
 document.addEventListener('DOMContentLoaded',()=>{
-const $=id=>document.getElementById(id),esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),SUPABASE_URL='https://qhakagliayozwviqkklw.supabase.co',SUPABASE_KEY='sb_publishable_YPMhL1PcQrZO8e6a_Py8kQ_sB57lKyO',sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const ROLES={
-'Joueur Gamer':['🎮','BONS','Aucun pouvoir.'],'Loup Gamer':['🐺','HACKERS','Choisit une victime chaque nuit.'],'Healer':['❤️‍🩹','BONS','Protège un joueur chaque nuit.'],'Stratège':['🧠','BONS','Peut annuler une élimination par vote.'],'Support':['🤝','BONS','Protège une fois.'],'Analyste':['🔎','BONS','Découvre secrètement un camp.'],'Speedrunner':['⚡','BONS','Peut utiliser un vote double une fois.'],'Hacker':['💻','HACKERS','Bloque un pouvoir une fois.'],'Saboteur':['🧨','HACKERS','Déclenche un faux événement une fois.'],'Solo Player':['🎭','SOLO','Choisit une mission secrète.'],'Manipulateur':['🎭','SOLO','Gagne lorsqu’il reste 3 joueurs.'],'Chaos':['🌀','SOLO','Gagne si ses 2 cibles secrètes meurent.'],'Opportuniste':['🎯','SOLO','Peut changer son vote 2 fois et gagne avec le camp victorieux.'],'Boss Final':['👑','SOLO','Gagne s’il est le dernier vivant.'],'Traître':['🗡️','BONS','Rejoint les HACKERS au tour 3.']};
-const NARUTO_ROLES={'Naruto':['🍥','VILLAGE','Voyant : découvre le camp d’un joueur chaque nuit.'],'Sasuke':['⚡','VILLAGE','Enquêteur : découvre si un joueur possède un pouvoir actif.'],'Sakura':['🌸','VILLAGE','Médecin : protège un joueur pendant la nuit.'],'Jiraiya':['🐸','VILLAGE','Informateur : enquête une fois par partie.'],'Kakashi':['👁️','VILLAGE','Gardien : protège un joueur pendant la nuit.'],'Kiba':['🐺','VILLAGE','Pisteur : peut suivre la trace d’un joueur.'],'Shikamaru':['🧠','VILLAGE','Stratège : peut annuler une élimination par vote une fois.'],'Choji':['🍖','VILLAGE','Protecteur : protège un joueur pendant la nuit.'],'Shino':['🪲','VILLAGE','Observateur : observe l’activité d’un joueur.'],'Hinata':['👁️','VILLAGE','Sentinelle : surveille un joueur pendant la nuit.'],'Rock Lee':['🥋','VILLAGE','Duelliste : peut provoquer un duel une fois par partie.'],'Might Guy':['🔥','VILLAGE','Mentor : renforce le pouvoir d’un allié une fois.'],'Gamabunta':['🐸','VILLAGE','Protecteur : protège un joueur pendant la nuit.'],'Tsunade':['💚','VILLAGE','Grande soigneuse : peut sauver un joueur une fois.'],'Temari':['🌪️','VILLAGE','Éclaireuse : obtient une information sur un joueur.'],'Gaara':['🏜️','VILLAGE','Défenseur : peut survivre à une attaque une fois.'],'Pain':['☁️','AKATSUKI','Chef : choisit chaque nuit la victime de l’Akatsuki.'],'Obito':['🌀','AKATSUKI','Manipulateur : bloque le pouvoir d’un joueur une fois.'],'Itachi':['👁️','AKATSUKI','Illusionniste : peut falsifier une information une fois.'],'Kisame':['🦈','AKATSUKI','Chasseur : peut éliminer une cible une fois par partie.'],'Deidara':['💥','AKATSUKI','Saboteur : déclenche un faux événement une fois.'],'Sasori':['🦂','AKATSUKI','Marionnettiste : peut manipuler une action une fois.'],'Kakuzu':['💰','AKATSUKI','Survivant : résiste à une élimination une fois.'],'Hidan':['🔴','AKATSUKI','Vengeur : peut éliminer celui qui l’élimine.'],'Zetsu':['🌿','AKATSUKI','Espion : observe secrètement les actions.'],'Orochimaru':['🐍','SOLO','Expérimentateur : accomplit sa mission personnelle.'],'Madara':['🔴','SOLO','Conquérant : doit devenir le dernier camp dominant.'],'Kabuto':['🧪','SOLO','Médecin noir : accomplit sa condition secrète.'],'Kaguya':['🌙','SOLO','Déesse : doit survivre jusqu’à la fin.'],'Kurama':['🦊','SOLO','Instinct : accomplit sa condition personnelle.'],'Traître':['🗡️','VILLAGE','Commence dans le Village puis rejoint secrètement l’Akatsuki au tour 3.']};
-function onlineNarutoRoles(count){
- const p={3:['Naruto','Pain','Orochimaru'],4:['Naruto','Kakashi','Itachi','Orochimaru'],5:['Naruto','Sakura','Kakashi','Itachi','Pain'],6:['Naruto','Sakura','Shikamaru','Itachi','Pain','Orochimaru'],7:['Naruto','Kakashi','Sakura','Shikamaru','Itachi','Pain','Orochimaru']};
- if(p[count])return p[count];
- const pool=['Naruto','Sasuke','Sakura','Jiraiya','Kakashi','Shikamaru','Choji','Shino','Hinata','Pain','Itachi','Kisame','Deidara','Sasori','Kakuzu','Hidan','Kurama','Madara','Kaguya','Orochimaru','Temari','Tsunade','Rock Lee','Minato','Gamabunta','Traître'];
- let roles=pool.slice(0,count);
- if(!roles.some(r=>NARUTO_ROLES[r]?.[1]==='AKATSUKI'))roles[Math.min(1,roles.length-1)]='Pain';
- return roles.sort(()=>Math.random()-.5);
-}
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=LG.escapeHtml;
+const SUPABASE_URL='https://qhakagliayozwviqkklw.supabase.co';
+const SUPABASE_KEY='sb_publishable_YPMhL1PcQrZO8e6a_Py8kQ_sB57lKyO';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const PREFIX='L64-';
+const DAY_DELAY=8000,VOTE_RESULT_DELAY=6000;
 
-function applyOnlineTheme(theme='gamer'){
- document.body.dataset.theme=theme;
- document.documentElement.dataset.theme=theme;
- document.title=theme==='naruto'?'Loup-Garou Naruto':'Loup-Garou Gamer';
-}
-function renderOnlineRoleOptions(theme='gamer'){
- const box=document.querySelector('#onlineOptions .special-box');
- if(!box)return;
- if(theme==='naruto'){
-  const groups=[
-   ['🍃 VILLAGE',['Naruto','Sasuke','Sakura','Jiraiya','Kakashi','Shikamaru','Choji','Shino','Hinata','Temari','Tsunade','Rock Lee','Minato','Gamabunta','Traître']],
-   ['☁️ AKATSUKI',['Pain','Itachi','Kisame','Deidara','Sasori','Kakuzu','Hidan']],
-   ['🟣 INDÉPENDANTS',['Kurama','Madara','Kaguya','Kabuto','Orochimaru']]
-  ];
-  box.innerHTML='<h3>🍥 Rôles Naruto</h3><p class="hint">Uniquement des personnages Naruto. Distribution automatique.</p>'+groups.map(g=>'<div class="role-group"><b>'+g[0]+'</b>'+g[1].filter(r=>NARUTO_ROLES[r]).map(r=>'<label class="role-option"><input type="checkbox" disabled><span>'+NARUTO_ROLES[r][0]+' <b>'+esc(r)+'</b><small>'+esc(NARUTO_ROLES[r][2])+'</small></span></label>').join('')+'</div>').join('');
-  return;
- }
- const roles=['Stratège','Support','Analyste','Speedrunner','Hacker','Saboteur','Solo Player','Manipulateur','Chaos','Opportuniste','Boss Final','Traître'];
- box.innerHTML='<h3>✨ Rôles spéciaux</h3><p class="hint">Distribués aléatoirement.</p>'+roles.map(r=>'<label class="role-option"><input class="online-special-role" type="checkbox" value="'+esc(r)+'"><span>'+ROLES[r][0]+' <b>'+esc(r)+'</b><small>'+esc(ROLES[r][2])+'</small></span></label>').join('');
-}
+const n={host:false,room:'',roomId:null,pseudo:'',playerId:crypto.randomUUID(),channel:null,
+  players:[],settings:{max:8,roles:[],theme:'gamer'},game:null,busy:false,again:false,viewKey:'',timerKey:''};
 
-let n={host:false,room:'',roomId:null,pseudo:'',playerId:crypto.randomUUID(),channel:null,players:[],settings:{max:8,roles:[]},game:null};
 const screen=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id)?.classList.add('active')};
 const status=t=>[$('onlineStatus'),$('joinStatus')].forEach(e=>{if(e)e.textContent=t});
-const alive=()=>n.players.filter(p=>p.alive);
-const me=()=>n.players.find(p=>p.playerId===n.playerId);
-const hacker=p=>p.roleName==='Loup Gamer'||p.roleName==='Hacker'||p.roleName==='Saboteur'||(p.roleName==='Traître'&&(n.game?.round||1)>=3);
-const code=()=> 'L64-'+Math.random().toString(36).slice(2,8).toUpperCase();
-function lobby(){if($('lobbyOptionsBtn'))$('lobbyOptionsBtn').style.display=n.host?'block':'none';if($('startOnlineGameBtn'))$('startOnlineGameBtn').style.display=n.host?'block':'none';if($('leaveOnlineBtn'))$('leaveOnlineBtn').style.display=n.host?'none':'block';if($('roomCodeDisplay'))$('roomCodeDisplay').textContent=n.room;if($('lobbyPlayers'))$('lobbyPlayers').innerHTML=n.players.map((p,i)=>'<div class="player '+(i===0?'active':'')+'"><strong>'+esc(p.pseudo)+'</strong><span>'+(i===0?'👑 Hôte':'🟢 Joueur')+'</span></div>').join('');if($('startOnlineGameBtn'))$('startOnlineGameBtn').disabled=!n.host||n.players.length<(n.settings.theme==='naruto'?3:5)}
-async function load(){if(!n.roomId)return;const r=await sb.from('game_players').select('*').eq('room_id',n.roomId).order('joined_at');if(r.error)return status('❌ '+r.error.message);n.players=r.data.map(p=>({id:p.id,playerId:p.player_id,pseudo:p.pseudo,alive:p.alive,roleName:p.role_data?.roleName||null,role:p.role_data?.role||null,uses:p.role_data?.uses||{},targets:p.role_data?.targets||[]}));lobby();if(n.game)renderGame()}
-function sub(){if(n.channel)sb.removeChannel(n.channel);n.channel=sb.channel('room-'+n.roomId).on('postgres_changes',{event:'*',schema:'public',table:'game_players',filter:'room_id=eq.'+n.roomId},load).on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:'id=eq.'+n.roomId},p=>{n.game=p.new.state?.game||null;if(p.new.phase==='game'&&n.game){renderGame();if(n.host)hostTick(n.game)}}).subscribe()}
-async function roomUpdate(game){n.game=game;await sb.from('game_rooms').update({phase:'game',state:{settings:n.settings,game},updated_at:new Date().toISOString()}).eq('id',n.roomId)}
-async function create(){renderOnlineRoleOptions($('onlineTheme')?.value||'gamer');const pseudo=$('createPseudo').value.trim();if(!pseudo)return alert('⚠️ Entre ton pseudo.');n.host=true;n.pseudo=pseudo;n.room=code();n.settings={max:+($('onlinePlayerCount')?.textContent||8),roles:[...document.querySelectorAll('.online-special-role:checked')].map(x=>x.value),theme:$('onlineTheme')?.value||'gamer'};applyOnlineTheme(n.settings.theme);status('Création du salon…');const r=await sb.from('game_rooms').insert({code:n.room,host_id:n.playerId,phase:'lobby',state:{settings:n.settings}}).select().single();if(r.error)return status('❌ '+r.error.message);n.roomId=r.data.id;const e=await sb.from('game_players').insert({room_id:r.data.id,player_id:n.playerId,pseudo,is_host:true});if(e.error)return status('❌ '+e.error.message);sub();await load();screen('onlineLobby');status('🟢 Salon créé : '+n.room)}
-async function join(){const pseudo=$('joinPseudo').value.trim(),c=$('roomCode').value.trim().replace(/\s+/g,'').toUpperCase();if(!pseudo||!c)return alert('⚠️ Pseudo + code requis.');status('🔎 Recherche du salon…');const r=await sb.from('game_rooms').select('*').eq('code',c).maybeSingle();if(!r.data)return status('❌ Salon introuvable.');if(r.data.phase!=='lobby')return status('❌ Partie déjà commencée.');const count=await sb.from('game_players').select('*',{count:'exact',head:true}).eq('room_id',r.data.id);if((count.count||0)>=(r.data.state?.settings?.max||8))return status('❌ Salon complet.');const e=await sb.from('game_players').insert({room_id:r.data.id,player_id:n.playerId,pseudo,is_host:false});if(e.error)return status('❌ '+e.error.message);n.host=false;n.pseudo=pseudo;n.roomId=r.data.id;n.room=r.data.code;n.settings=r.data.state?.settings||{max:8,roles:[]};applyOnlineTheme(n.settings.theme||'gamer');sub();await load();screen('onlineLobby');status('🟢 Connecté au salon.')}
-async function save(){if(!n.host)return;n.settings.max=+$('onlinePlayerCount').textContent;n.settings.theme=$('onlineTheme')?.value||n.settings.theme||'gamer';applyOnlineTheme(n.settings.theme);n.settings.roles=[...document.querySelectorAll('.online-special-role:checked')].map(x=>x.value);await sb.from('game_rooms').update({state:{settings:n.settings},updated_at:new Date().toISOString()}).eq('id',n.roomId);lobby();screen('onlineLobby')}
-function chooseRoles(){if(n.settings.theme==='naruto')return onlineNarutoRoles(n.players.length);let pool=['Loup Gamer','Healer',...n.settings.roles.filter(x=>ROLES[x]&&x!=='Joueur Gamer')];while(pool.length<n.players.length)pool.push('Joueur Gamer');return pool.slice(0,n.players.length).sort(()=>Math.random()-.5)}
-async function start(){applyOnlineTheme(n.settings.theme||'gamer');const min=n.settings.theme==='naruto'?3:5;if(!n.host||n.players.length<min)return alert('⚠️ Il faut au moins '+min+' joueurs.');let roles=chooseRoles();for(let i=0;i<n.players.length;i++){let targets=[];if(roles[i]==='Chaos')targets=n.players.filter((_,j)=>j!==i).sort(()=>Math.random()-.5).slice(0,2).map(p=>p.playerId);await sb.from('game_players').update({alive:true,role_data:{roleName:roles[i],role:n.settings.theme==='naruto'?NARUTO_ROLES[roles[i]]:ROLES[roles[i]],uses:{},targets}}).eq('id',n.players[i].id)}await load();const game={round:1,phase:'reveal',ready:{},night:{queue:[],index:0,actions:{},blocked:[]},vote:{votes:{},changes:{}},message:'Découvrez vos rôles.'};await roomUpdate(game);renderGame()}
-function roleCard(p){
- const roles=n.settings.theme==='naruto'?NARUTO_ROLES:ROLES;
- const r=roles[p.roleName]||['🎭','SOLO','Condition personnelle.'];
- const map={'Traître':'01','Solo Player':'02','Manipulateur':'02','Chaos':'02','Opportuniste':'02','Boss Final':'02','Saboteur':'03','Analyste':'04','Healer':'05','Loup Gamer':'06','Hacker':'07','Support':'08','Speedrunner':'09','Stratège':'10','Joueur Gamer':'11'};
- const card=n.settings.theme==='naruto'?null:'cartes/carte_'+(map[p.roleName]||'11')+'.png';
- const front=card?'<img id="onlineCardImage" class="card-image hidden" src="'+card+'">':'<div id="onlineCardImage" class="naruto-card-art hidden"><div class="naruto-card-icon">'+r[0]+'</div><div class="naruto-card-title">'+esc(p.roleName)+'</div><div class="naruto-card-team">'+esc(r[1])+'</div><div class="naruto-card-desc">'+esc(r[2])+'</div></div>';
- return '<div class="role-reveal"><div class="role-card-visual"><img id="onlineCardBack" class="card-image" src="cartes/dos.png">'+front+'<div class="card-flip-hint">🂠 Ta carte est face cachée</div></div><button class="primary" id="onlineRevealCard">👁️ Révéler ma carte</button><div class="night-card role-info hidden" id="onlineRoleInfo"><h3>'+r[0]+' '+esc(p.roleName)+'</h3><div class="team">'+esc(r[1])+'</div><p>'+esc(r[2])+'</p></div><button class="primary hidden" id="onlineReady">Continuer →</button></div>';
-}
-function renderGame(){screen('onlineGame');const p=me(),g=n.game||{};$('onlineRound').textContent='TOUR '+(g.round||1);$('onlinePhase').textContent=g.phase==='reveal'?'🎭 Rôles':g.phase==='night'?'🌙 Nuit':g.phase==='vote'?'🗳️ Vote':g.phase==='end'?'🏆 Fin':'☀️ Jour';$('onlineAlive').textContent=alive().length;$('onlinePlayers').innerHTML=n.players.map(x=>'<div class="player '+(x.alive?'active':'dead')+'"><strong>'+esc(x.pseudo)+'</strong><small>'+(x.alive?'🟢 Vivant':'⚫ Éliminé')+'</small></div>').join('');if(g.phase==='reveal'){if(!p)return;if(g.ready?.[p.playerId]){$('onlineAction').innerHTML='<div class="waiting-role"><div class="role-icon">⏳</div><h2>Carte révélée</h2><p>Tu es prêt !</p><p>En attente des autres joueurs…</p></div>';return}$('onlineAction').innerHTML=roleCard(p);$('onlineRevealCard').onclick=()=>{ $('onlineCardBack')?.classList.add('hidden');$('onlineCardImage')?.classList.remove('hidden');$('onlineRevealCard')?.classList.add('hidden');$('onlineRoleInfo')?.classList.remove('hidden');if(p.roleName==='Solo Player')showSoloMissionOnline(p);else{$('onlineAction').insertAdjacentHTML('beforeend','<button class="primary" id="onlineReady">Continuer</button>');$('onlineReady').onclick=()=>readyReveal();}}}else if(g.phase==='night')renderNight(p);else if(g.phase==='vote')renderVote(p);else if(g.phase==='day')renderDay(p);else renderEnd()}function showSoloMissionOnline(p){const ms=[['survivant','🛡️ Survivant','3 joueurs restants'],['chaos','🌀 Chaos','2 cibles éliminées'],['dernier','👑 Dernier vivant','être le dernier'],['opportuniste','🎯 Opportuniste','gagner avec le camp victorieux']];$('onlineMissionBox').innerHTML='<div class="solo-mission-box"><h3>🎯 Choisis ta mission</h3><select id="onlineSoloMission"><option value="">Choisir</option>'+ms.map(m=>'<option value="'+m[0]+'">'+m[1]+' — '+m[2]+'</option>').join('')+'</select><button class="primary" id="onlineMissionConfirm">Valider ma mission</button></div>';$('onlineMissionConfirm').onclick=async()=>{const v=$('onlineSoloMission').value;if(!v)return alert('⚠️ Choisis une mission.');let g=JSON.parse(JSON.stringify(n.game));g.soloMission=g.soloMission||{};g.soloMission[p.playerId]={mission:v,targets:v==='chaos'?n.players.filter(x=>x.playerId!==p.playerId).sort(()=>Math.random()-.5).slice(0,2).map(x=>x.playerId):[]};await roomUpdate(g);$('onlineMissionConfirm').classList.add('hidden');$('onlineMissionBox').insertAdjacentHTML('beforeend','<button class="primary" id="onlineReady">Continuer</button>');$('onlineReady').onclick=()=>readyReveal();};}
-async function setGame(game){await roomUpdate(game);if(n.host)await hostTick(game)}
-async function readyReveal(){let g=JSON.parse(JSON.stringify(n.game||{}));g.ready=g.ready||{};g.ready[n.playerId]=true;g.message='⏳ En attente des autres joueurs…';await roomUpdate(g);if(n.host)await hostTick(g);renderGame()}
-function nightQueue(g){
- if(n.settings.theme==='naruto'){
-  const order=['Obito','Naruto','Sasuke','Jiraiya','Kiba','Shino','Hinata','Sakura','Kakashi','Choji','Gamabunta','Tsunade','Temari','Gaara','Rock Lee','Might Guy','Pain','Kisame','Deidara','Sasori','Kakuzu','Hidan','Zetsu','Traître'];
-  return order.map(role=>alive().find(p=>p.roleName===role&&(!p.uses?.power)&&(!g.night?.blocked||!g.night.blocked.includes(p.playerId))&&((role!=='Traître'&&role!=='Pain')||g.round>=3))).filter(Boolean).map(p=>({id:p.playerId,type:p.roleName}));
- }
- let q=[];const addRole=r=>{const p=alive().find(x=>x.roleName===r);if(p&&!p.uses?.used)return q.push({id:p.playerId,type:r})};addRole('Hacker');addRole('Saboteur');addRole('Analyste');addRole('Support');let wolves=alive().filter(x=>x.roleName==='Loup Gamer'||(x.roleName==='Traître'&&g.round>=3));wolves.forEach(p=>q.push({id:p.playerId,type:'wolf'}));addRole('Healer');return q
-}
-async function startNight(g){g.phase='night';g.night={queue:nightQueue(g),index:0,actions:{},blocked:[]};g.message=n.settings.theme==='naruto'?'🌙 La nuit tombe sur le Village…':'🌙 La nuit tombe…';await setGame(g)}
-function actor(){const a=n.game?.night?.queue?.[n.game.night.index];return a?n.players.find(p=>p.playerId===a.id):null}
-function renderNight(p){const a=actor();if(n.settings.theme==='naruto'){if(!a){$('onlineAction').innerHTML='<div class="night-card"><h3>🌙 Nuit du Village</h3><p>Le maître du jeu prépare la suite…</p></div>';return}if(p?.playerId!==a.playerId){$('onlineAction').innerHTML='<div class="night-card"><h3>🌙 Nuit ninja</h3><p>Un autre shinobi agit. Attends ton tour…</p></div>';return}const type=n.game.night.queue[n.game.night.index].type;const r=NARUTO_ROLES[p.roleName]||['⚡','VILLAGE','Pouvoir ninja.'];const targets=alive().filter(x=>x.playerId!==p.playerId);$('onlineAction').innerHTML='<div class="night-card"><h3>'+r[0]+' '+esc(p.roleName)+'</h3><p>'+esc(r[2])+'</p><select id="nightTarget"><option value="">Choisir une cible</option>'+targets.map(x=>'<option value="'+x.playerId+'">'+esc(x.pseudo)+'</option>').join('')+'</select><button class="primary" id="nightConfirm">⚡ Utiliser</button><button class="secondary" id="nightSkip">Passer</button></div>';$('nightConfirm').onclick=()=>{const t=$('nightTarget').value;if(!t)return alert('⚠️ Choisis une cible.');let g=JSON.parse(JSON.stringify(n.game));g.night.actions[p.playerId]={type,target:t};g.night.index++;roomUpdate(g)};$('nightSkip').onclick=()=>{let g=JSON.parse(JSON.stringify(n.game));g.night.index++;roomUpdate(g)};return}if(!a){$('onlineAction').innerHTML='<div class="night-card"><h3>🌙 Nuit</h3><p>Le maître du jeu prépare la suite…</p></div>';return}if(p?.playerId!==a.playerId){$('onlineAction').innerHTML='<div class="night-card"><h3>🌙 Nuit</h3><p>Un autre joueur agit. Attends ton tour…</p></div>';return}const type=n.game.night.queue[n.game.night.index].type;if(p.uses?.[type==='wolf'?'wolf':type]){if(n.host)hostTick(n.game);return}let targets=alive().filter(x=>type==='Support'||type==='wolf'?true:x.playerId!==p.playerId);let opts=targets.map(x=>'<option value="'+x.playerId+'">'+esc(x.pseudo)+'</option>').join('');let title={Hacker:'💻 Hacker',Saboteur:'🧨 Saboteur',Analyste:'🔎 Analyste',Support:'🤝 Support',wolf:'🐺 Choisis une victime',Healer:'❤️‍🩹 Healer'}[type]||type;if(type==='Saboteur'){$('onlineAction').innerHTML='<div class="night-card"><h3>🧨 Saboteur</h3><p>Déclencher le faux événement ?</p><button class="primary" id="sabotageConfirm">🧨 Saboter</button></div>';$('sabotageConfirm').onclick=()=>submitNightAction(p,'Saboteur','1');return} $('onlineAction').innerHTML='<div class="night-card"><h3>'+title+'</h3><p>Choisis une cible.</p><select id="nightTarget"><option value="">Choisir</option>'+opts+'</select><button class="primary" id="nightConfirm">Valider</button></div>';$('nightConfirm').onclick=()=>{let t=$('nightTarget').value;if(!t)return alert('⚠️ Choisis une cible.');submitNightAction(p,type,t)}}
-async function submitNightAction(p,type,target){let g=JSON.parse(JSON.stringify(n.game));g.night.actions[p.playerId]={type,target};if(type==='Hacker')g.night.blocked.push(target);g.night.index++;await setGame(g)}
-async function hostTick(g){if(!n.host)return;if(g.phase==='reveal'){if(Object.keys(g.ready||{}).length>=n.players.length)await startNight(g);return}if(g.phase==='night'){let q=g.night.queue;if(g.night.index>=q.length){let victim=null,prot=null;Object.values(g.night.actions).forEach(a=>{if(a.type==='wolf')victim=a.target;if(a.type==='Healer'||a.type==='Support')prot=a.target});if(victim&&victim!==prot){let v=n.players.find(p=>p.playerId===victim);if(v){await sb.from('game_players').update({alive:false}).eq('id',v.id);v.alive=false;g.message='☠️ '+v.pseudo+' a été éliminé pendant la nuit.'}}else g.message='🌙 Personne n’a été éliminé cette nuit.';await load();let w=winner();if(w){await finish(w,g);return}g.phase='day';await roomUpdate(g);setTimeout(()=>{if(n.host)startVote(g)},1000)}}else if(g.phase==='vote'&&Object.keys(g.vote.votes||{}).length>=alive().length)await resolveVote(g)}
-$('leaveOnlineBtn')?.addEventListener('click',async()=>{if(!n.roomId)return;const ok=confirm('Quitter ce salon ?');if(!ok)return;await sb.from('game_players').delete().eq('room_id',n.roomId).eq('player_id',n.playerId);if(n.channel)await sb.removeChannel(n.channel);n.roomId=null;n.room='';n.players=[];n.game=null;screen('online');status('');});$('onlineBtn')?.addEventListener('click',()=>screen('online'));$('onlineTheme')?.addEventListener('change',()=>{applyOnlineTheme($('onlineTheme').value);renderOnlineRoleOptions($('onlineTheme').value);});$('createOnlineBtn')?.addEventListener('click',()=>screen('onlineCreate'));$('joinOnlineBtn')?.addEventListener('click',()=>screen('onlineJoin'));$('createRoomBtn')?.addEventListener('click',create);$('joinRoomBtn')?.addEventListener('click',join);$('saveOnlineOptionsBtn')?.addEventListener('click',save);$('startOnlineGameBtn')?.addEventListener('click',start);$('lobbyOptionsBtn')?.addEventListener('click',()=>{renderOnlineRoleOptions(n.settings.theme||'gamer');screen('onlineOptions')});$('onlineMinusPlayers')?.addEventListener('click',()=>{const e=$('onlinePlayerCount');e.textContent=Math.max(n.settings.theme==='naruto'?3:5,+e.textContent-1)});$('onlinePlusPlayers')?.addEventListener('click',()=>{const e=$('onlinePlayerCount');e.textContent=Math.min(20,+e.textContent+1)});document.querySelectorAll('.back').forEach(b=>b.addEventListener('click',()=>screen(b.dataset.screen||'home')));
-
-function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
-const isNaruto=()=>n.settings?.theme==='naruto';
-const nameOf=id=>n.players.find(x=>x.playerId===id)?.pseudo||'?';
+const theme=()=>n.settings.theme||'gamer';
+const alive=()=>LG.alive(n.players);
+const P=id=>LG.byId(n.players,id);
+const me=()=>P(n.playerId);
 const panel=html=>{$('onlineAction').innerHTML=html};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function applyTheme(t){document.body.dataset.theme=t;document.documentElement.dataset.theme=t;document.title=t==='naruto'?'Loup-Garou Naruto':'Loup-Garou Gamer'}
+const shortCode=c=>String(c||'').replace(PREFIX,'');
+function normalizeCode(c){c=String(c||'').replace(/\s+/g,'').toUpperCase();if(!c.startsWith(PREFIX))c=PREFIX+c.replace(/^L64-?/,'');return c}
 
-/* ---------- Camps et conditions de victoire ---------- */
-
-function bad(p){
-  if(isNaruto())return NARUTO_ROLES[p.roleName]?.[1]==='AKATSUKI'||(p.roleName==='Traître'&&(n.game?.round||1)>=3);
-  return hacker(p);
-}
-function isSolo(p){return ((isNaruto()?NARUTO_ROLES:ROLES)[p.roleName]||[])[1]==='SOLO'}
-const isDead=id=>!n.players.find(x=>x.playerId===id)?.alive;
-
-function winner(){
-  const g=n.game||{},a=alive();
-  if(!a.length)return 'PERSONNE';
-  if(isNaruto()){
-    const ak=a.filter(bad).length,good=a.filter(p=>!bad(p)&&!isSolo(p)).length,has=r=>a.some(p=>p.roleName===r);
-    if(has('Kaguya')&&a.length===1)return 'KAGUYA';
-    if(has('Orochimaru')&&a.length===1)return 'OROCHIMARU';
-    if(has('Madara')&&ak===0&&a.length<=3)return 'MADARA';
-    if(ak===0)return 'VILLAGE';
-    if(ak>=good)return 'AKATSUKI';
-    return null;
+/* ---------- Options du salon ---------- */
+function renderRoleOptions(){
+  const box=document.querySelector('#onlineOptions .special-box');if(!box)return;
+  if(theme()==='naruto'){
+    box.innerHTML='<h3>🍥 Rôles Naruto</h3><p class="hint">Distribution automatique selon le nombre de joueurs.</p>'+
+      LG.NARUTO_GROUPS.map(g=>'<div class="role-group"><b>'+g[0]+'</b>'+g[1].map(r=>{const d=LG.def('naruto',r);return'<label class="role-option"><span>'+d.icon+' <b>'+esc(r)+'</b><small>'+esc(d.desc)+'</small></span></label>'}).join('')+'</div>').join('');
+    return;
   }
-  if(a.find(p=>p.roleName==='Manipulateur')&&a.length<=3)return 'MANIPULATEUR';
-  const c=a.find(p=>p.roleName==='Chaos');
-  if(c&&c.targets?.length===2&&c.targets.every(isDead))return 'CHAOS';
-  if(a.find(p=>p.roleName==='Boss Final')&&a.length===1)return 'BOSS FINAL';
-  const s=a.find(p=>p.roleName==='Solo Player'),sm=s&&g.soloMission?.[s.playerId];
-  if(sm){
-    if(sm.mission==='survivant'&&a.length<=3)return 'SOLO PLAYER';
-    if(sm.mission==='dernier'&&a.length===1)return 'SOLO PLAYER';
-    if(sm.mission==='chaos'&&sm.targets?.length===2&&sm.targets.every(isDead))return 'SOLO PLAYER';
-  }
-  const h=a.filter(hacker).length,good=a.filter(p=>!hacker(p)&&!isSolo(p)).length;
-  if(h===0)return 'BONS';
-  if(h>=good)return 'HACKERS';
-  return null;
+  const on=new Set(n.settings.roles||[]);
+  box.innerHTML='<h3>✨ Rôles spéciaux</h3><p class="hint">Le Loup Gamer et le Healer sont toujours présents. Les rôles sont distribués aléatoirement.</p>'+
+    LG.GAMER_SPECIALS.map(r=>{const d=LG.def('gamer',r);return'<label class="role-option"><input class="online-special-role" type="checkbox" value="'+esc(r)+'"'+(on.has(r)?' checked':'')+'><span>'+d.icon+' <b>'+esc(r)+'</b><small>'+esc(d.desc)+'</small></span></label>'}).join('');
 }
 
-const WIN={
-  BONS:['🛡️','Victoire des BONS !','Tous les Hackers ont été éliminés.'],
-  HACKERS:['🐺','Victoire des HACKERS !','Les Hackers ont pris le dessus.'],
-  MANIPULATEUR:['🎭','Victoire du MANIPULATEUR !','Il a survécu jusqu’à 3 joueurs.'],
-  CHAOS:['🌀','Victoire du CHAOS !','Ses deux cibles sont éliminées.'],
-  'BOSS FINAL':['👑','Victoire du BOSS FINAL !','Il est le dernier joueur vivant.'],
-  'SOLO PLAYER':['🎭','Victoire du SOLO PLAYER !','Mission accomplie.'],
-  VILLAGE:['🍃','Victoire du VILLAGE !','Tous les membres de l’Akatsuki sont éliminés.'],
-  AKATSUKI:['☁️','Victoire de l’AKATSUKI !','L’Akatsuki est devenue majoritaire.'],
-  KAGUYA:['🌙','Victoire de KAGUYA !','Elle est la dernière survivante.'],
-  MADARA:['🔴','Victoire de MADARA !','Il a rempli sa condition.'],
-  OROCHIMARU:['🐍','Victoire d’OROCHIMARU !','Il est le dernier survivant.'],
-  PERSONNE:['💀','Personne ne gagne','Tout le monde est éliminé.']
-};
-
-async function finish(w,g,msg){
-  if(g.phase==='end')return;
-  g.phase='end';g.winner=w;
-  if(msg)g.message=msg;
-  await roomUpdate(g);
+/* ---------- Salon ---------- */
+function lobby(){
+  const h=n.host;
+  if($('lobbyOptionsBtn'))$('lobbyOptionsBtn').style.display=h?'block':'none';
+  if($('startOnlineGameBtn')){$('startOnlineGameBtn').style.display=h?'block':'none';$('startOnlineGameBtn').disabled=n.players.length<LG.minPlayers(theme())}
+  if($('leaveOnlineBtn'))$('leaveOnlineBtn').style.display=h?'none':'block';
+  if($('roomCodeDisplay'))$('roomCodeDisplay').textContent=shortCode(n.room);
+  if($('lobbyPlayers'))$('lobbyPlayers').innerHTML=n.players.map(p=>'<div class="player '+(p.isHost?'active':'')+'"><strong>'+esc(p.name)+'</strong><br><small>'+(p.isHost?'👑 Hôte':'🟢 Joueur')+'</small></div>').join('')+
+    '<p class="hint">'+n.players.length+'/'+n.settings.max+' joueurs — minimum '+LG.minPlayers(theme())+'.</p>';
 }
-
-/* ---------- Écriture dans la ligne d'un joueur (sans conflit) ---------- */
-
-async function setUses(p,patch){
-  if(!p)return;
-  p.uses={...(p.uses||{}),...patch};
-  const r=await sb.from('game_players').update({role_data:{roleName:p.roleName,role:p.role,targets:p.targets||[],uses:p.uses}}).eq('id',p.id);
-  if(r.error)alert('❌ '+r.error.message);
-}
-const setMine=patch=>setUses(me(),patch);
-
-/* ---------- Remplacements ---------- */
-
 async function load(){
   if(!n.roomId)return;
   const r=await sb.from('game_players').select('*').eq('room_id',n.roomId).order('joined_at');
   if(r.error)return status('❌ '+r.error.message);
-  n.players=r.data.map(p=>({id:p.id,playerId:p.player_id,pseudo:p.pseudo,alive:p.alive,roleName:p.role_data?.roleName||null,role:p.role_data?.role||null,uses:p.role_data?.uses||{},targets:p.role_data?.targets||[]}));
-  lobby();
-  if(n.game){
-    if(n.game.phase==='reveal'){n.game.ready=n.game.ready||{};n.players.forEach(x=>{if(x.uses?.ready)n.game.ready[x.playerId]=true})}
-    renderGame();
-    if(n.host)hostTick(n.game);
-  }
+  n.players=r.data.map(p=>{const d=p.role_data||{},input=d.input||{};return{rowId:p.id,id:p.player_id,name:p.pseudo,alive:p.alive!==false,isHost:p.is_host,
+    roleName:d.roleName||null,targets:d.targets||[],input,soloMission:input.soloMission||null,soloTargets:input.soloTargets||[]}});
+  if(n.roomId&&!me()&&n.game){status('⚠️ Tu as été retiré du salon.')}
+  if(!n.game||n.game.phase==='lobby')lobby();
+  else{renderGame();if(n.host)hostTick()}
 }
-
-async function readyReveal(){
-  await setMine({ready:true});
-  if(n.game){n.game.ready=n.game.ready||{};n.game.ready[n.playerId]=true}
+function subscribe(){
+  if(n.channel)sb.removeChannel(n.channel);
+  n.channel=sb.channel('room-'+n.roomId)
+    .on('postgres_changes',{event:'*',schema:'public',table:'game_players',filter:'room_id=eq.'+n.roomId},()=>load())
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:'id=eq.'+n.roomId},payload=>{
+      const st=payload.new.state||{};
+      if(st.settings)n.settings=st.settings;
+      applyTheme(theme());
+      if(payload.new.phase==='game'&&st.game){
+        if(!n.host||!n.game||(st.game.seq||0)>=(n.game.seq||0))n.game=st.game;
+        renderGame();if(n.host)hostTick();
+      }else lobby();
+    }).subscribe();
+}
+async function roomUpdate(game){
+  game.seq=(game.seq||0)+1;n.game=game;
+  const r=await sb.from('game_rooms').update({phase:'game',state:{settings:n.settings,game},updated_at:new Date().toISOString()}).eq('id',n.roomId);
+  if(r.error)console.error('[roomUpdate]',r.error);
   renderGame();
-  if(n.host)hostTick(n.game);
+}
+async function setMine(patch){
+  const p=me();if(!p)return;
+  p.input={...p.input,...patch};
+  if(patch.soloMission!==undefined)p.soloMission=patch.soloMission;
+  if(patch.soloTargets!==undefined)p.soloTargets=patch.soloTargets;
+  const r=await sb.from('game_players').update({role_data:{roleName:p.roleName,targets:p.targets,input:p.input}}).eq('id',p.rowId);
+  if(r.error)alert('❌ '+r.error.message);
+  renderGame();
+  if(n.host)hostTick();
 }
 
-/* hostTick : seul l'hôte fait avancer la partie, un pas à la fois */
-async function hostTick(g){
+async function create(){
+  const pseudo=$('createPseudo').value.trim();
+  if(!pseudo)return alert('⚠️ Entre ton pseudo.');
+  n.host=true;n.pseudo=pseudo;n.room=PREFIX+Math.random().toString(36).slice(2,8).toUpperCase();
+  n.settings={max:+($('onlinePlayerCount')?.textContent||8),roles:[],theme:$('onlineTheme')?.value||'gamer'};
+  applyTheme(theme());status('Création du salon…');
+  const r=await sb.from('game_rooms').insert({code:n.room,host_id:n.playerId,phase:'lobby',state:{settings:n.settings}}).select().single();
+  if(r.error)return status('❌ '+r.error.message);
+  n.roomId=r.data.id;
+  const e=await sb.from('game_players').insert({room_id:n.roomId,player_id:n.playerId,pseudo,is_host:true});
+  if(e.error)return status('❌ '+e.error.message);
+  subscribe();await load();screen('onlineLobby');status('🟢 Salon créé : '+shortCode(n.room));
+}
+async function join(){
+  const pseudo=$('joinPseudo').value.trim(),raw=$('roomCode').value.trim();
+  if(!pseudo||!raw)return alert('⚠️ Pseudo + code requis.');
+  const c=normalizeCode(raw);
+  status('🔎 Recherche du salon…');
+  const r=await sb.from('game_rooms').select('*').eq('code',c).maybeSingle();
+  if(r.error)return status('❌ '+r.error.message);
+  if(!r.data)return status('❌ Salon introuvable. Vérifie le code.');
+  if(r.data.phase!=='lobby')return status('❌ La partie a déjà commencé.');
+  const list=await sb.from('game_players').select('pseudo').eq('room_id',r.data.id);
+  if(list.error)return status('❌ '+list.error.message);
+  const settings=r.data.state?.settings||{max:8,roles:[],theme:'gamer'};
+  if(list.data.length>=(settings.max||8))return status('❌ Salon complet.');
+  if(list.data.some(x=>x.pseudo.toLowerCase()===pseudo.toLowerCase()))return status('❌ Ce pseudo est déjà pris dans ce salon.');
+  const e=await sb.from('game_players').insert({room_id:r.data.id,player_id:n.playerId,pseudo,is_host:false});
+  if(e.error)return status('❌ '+e.error.message);
+  n.host=false;n.pseudo=pseudo;n.roomId=r.data.id;n.room=r.data.code;n.settings=settings;
+  applyTheme(theme());subscribe();await load();screen('onlineLobby');status('🟢 Connecté au salon.');
+}
+async function leave(){
+  if(!n.roomId||!confirm('Quitter ce salon ?'))return;
+  await sb.from('game_players').delete().eq('room_id',n.roomId).eq('player_id',n.playerId);
+  if(n.channel)await sb.removeChannel(n.channel);
+  Object.assign(n,{roomId:null,room:'',players:[],game:null,channel:null});
+  screen('online');status('');
+}
+async function saveOptions(){
   if(!n.host)return;
+  n.settings.max=Math.max(n.players.length,+$('onlinePlayerCount').textContent||8);
+  n.settings.roles=[...document.querySelectorAll('.online-special-role:checked')].map(x=>x.value);
+  const r=await sb.from('game_rooms').update({state:{settings:n.settings},updated_at:new Date().toISOString()}).eq('id',n.roomId);
+  if(r.error)return alert('❌ '+r.error.message);
+  lobby();screen('onlineLobby');
+}
+
+/* ---------- Lancement ---------- */
+async function start(){
+  if(!n.host)return;
+  await load();
+  const d=LG.distribute(theme(),n.players.length,n.settings.roles);
+  if(d.error)return alert('⚠️ '+d.error);
+  n.players.forEach((p,i)=>{p.roleName=d.roles[i];p.alive=true;p.input={};p.soloMission=null;p.soloTargets=[]});
+  n.players.forEach(p=>p.targets=LG.initialTargets(theme(),n.players,p.roleName,p.id));
+  for(const p of n.players){
+    const r=await sb.from('game_players').update({alive:true,role_data:{roleName:p.roleName,targets:p.targets,input:{}}}).eq('id',p.rowId);
+    if(r.error)return alert('❌ '+r.error.message);
+  }
+  await roomUpdate({round:1,phase:'reveal',mem:{},flags:{},night:null,privates:{},message:'Découvrez vos rôles.',vote:null,winner:null,dayKind:null,seq:0});
+}
+
+/* =====================================================================
+   HÔTE : fait avancer la partie, un pas à la fois
+   ===================================================================== */
+async function hostTick(){
+  if(!n.host||!n.game)return;
   if(n.busy){n.again=true;return}
   n.busy=true;
-  try{
-    do{n.again=false;await tickOnce(n.game||g)}while(n.again);
-  }catch(e){console.error('[hostTick]',e)}
+  try{let guard=0;do{n.again=false}while((await tickOnce())&&guard++<50||n.again)}
+  catch(e){console.error('[hostTick]',e)}
   finally{n.busy=false}
 }
-
-async function tickOnce(g){
-  if(!g)return;
+async function tickOnce(){
+  const g=n.game;if(!g)return false;
   if(g.phase==='reveal'){
-    if(n.players.length&&n.players.every(p=>p.uses?.ready))await startNight(g);
-    return;
+    if(n.players.length&&n.players.every(p=>p.input?.ready)){await startNight(LG.clone(g));return true}
+    return false;
   }
   if(g.phase==='night'){
-    if(g.night.index<g.night.queue.length)return;
-    await resolveNight(g);
-    return;
+    const step=g.night.steps[g.night.index];
+    if(!step){await endNight(LG.clone(g));return true}
+    const actor=P(step.actor);
+    const ng=LG.clone(g);
+    if(!actor||!actor.alive||LG.isBlocked(g.night.actions,step.actor)){ng.night.index++;await roomUpdate(ng);return true}
+    const act=actor.input?.act;
+    if(act&&act.round===g.round&&act.index===g.night.index){
+      if(act.target||act.confirm)ng.night.actions.push({actor:step.actor,key:step.key,type:step.type,target:act.target||null});
+      ng.night.index++;await roomUpdate(ng);return true;
+    }
+    return false;
   }
-  if(g.phase==='vote')await resolveVote(g);
+  if(g.phase==='day'){scheduleDay(g);return false}
+  if(g.phase==='vote')return await tickVote(LG.clone(g));
+  return false;
 }
-
-/* ---------- Nuit -> jour ---------- */
-
-async function resolveNight(g){
-  const acts=g.night.actions||{},blocked=g.night.blocked||[];
-  let victim=null;const prot=[];
-  Object.entries(acts).forEach(([pid,a])=>{
-    if(blocked.includes(pid)&&a.type!=='Hacker')return; /* pouvoir bloqué */
-    if(['wolf','Pain','Traître'].includes(a.type))victim=a.target;
-    if(['Healer','Support','Sakura','Kakashi','Choji','Gamabunta','Tsunade'].includes(a.type))prot.push(a.target);
-  });
-  let msg;
-  if(victim&&!prot.includes(victim)){
-    const v=n.players.find(x=>x.playerId===victim);
-    if(v){await sb.from('game_players').update({alive:false}).eq('id',v.id);v.alive=false;msg='☠️ '+v.pseudo+' a été éliminé pendant la nuit.'}
-  }
-  if(!msg)msg=victim?'🛡️ Une attaque a été repoussée cette nuit.':'🌙 Personne n’a été éliminé cette nuit.';
-  g.message=msg;
-  const w=winner();
-  if(w)return finish(w,g,msg);
+async function startNight(g){
+  g.phase='night';g.flags={};
+  g.night={steps:LG.nightSteps(theme(),n.players,g.round,g.mem),index:0,actions:[]};
+  g.message=theme()==='naruto'?'🌙 La nuit tombe sur le Village…':'🌙 La nuit tombe…';
+  await roomUpdate(g);
+}
+async function kill(ids){
+  for(const id of ids){const p=P(id);if(!p)continue;p.alive=false;await sb.from('game_players').update({alive:false}).eq('id',p.rowId)}
+}
+async function endNight(g){
+  const r=LG.resolveNight(theme(),n.players,g.round,g.mem,g.night.actions);
+  await kill(r.deaths);
+  g.mem=r.mem;g.flags=r.flags;g.privates=r.privateMsgs;g.message=r.messages.join('\n');
+  const w=LG.winner(theme(),n.players,g.round);
+  if(w){g.phase='end';g.winner=w;return roomUpdate(g)}
   g.phase='day';g.dayKind='night';
   await roomUpdate(g);
-  await sleep(5000);
-  await startVote(n.game);
 }
-
-function renderDay(p){
-  const g=n.game;let extra='';
-  if(g.dayKind!=='vote'){
-    const a=p&&g.night?.actions?.[p.playerId];
-    if(a&&(a.type==='Analyste'||a.type==='Naruto')){
-      const t=n.players.find(x=>x.playerId===a.target);
-      if(t)extra+='<p>🔎 Résultat secret : <b>'+esc(t.pseudo)+'</b> est dans le camp <b>'+(bad(t)?(isNaruto()?'AKATSUKI':'HACKER'):(isNaruto()?'VILLAGE':'BON'))+'</b>.</p>';
-    }
-    if(Object.values(g.night?.actions||{}).some(x=>x.type==='Saboteur'))extra+='<p>🚨 Fausse alerte détectée… personne ne sait qui ment.</p>';
-  }
-  panel('<div class="night-card"><h3>'+(g.dayKind==='vote'?'📊 Résultat du vote':'☀️ Le jour se lève')+'</h3><p>'+esc(g.message||'')+'</p>'+extra+'</div>');
+function scheduleDay(g){
+  const key=g.round+'-'+g.dayKind;
+  if(n.timerKey===key)return;
+  n.timerKey=key;
+  setTimeout(()=>advanceDay(key),g.dayKind==='night'?DAY_DELAY:VOTE_RESULT_DELAY);
 }
-
-/* ---------- Vote ---------- */
-
-async function startVote(g){
-  if(!g||g.phase!=='day')return;
-  g.phase='vote';g.vote={pending:null};
-  g.message='🗳️ Votez pour éliminer un suspect.';
-  await roomUpdate(g);
+async function advanceDay(key){
+  const g=n.game;
+  if(!n.host||!g||g.phase!=='day'||g.round+'-'+g.dayKind!==key)return;
+  const ng=LG.clone(g);
+  if(ng.dayKind==='night'){ng.phase='vote';ng.vote={pending:null};ng.message='🗳️ Votez pour éliminer un suspect.';await roomUpdate(ng)}
+  else{ng.round++;ng.privates={};await startNight(ng)}
 }
-
-function renderVote(p){
-  const g=n.game,pd=g.vote?.pending;
-  if(!p||!p.alive)return panel('<div class="night-card"><h3>👻 Tu es éliminé</h3><p>Observe la suite de la partie.</p></div>');
-
+function collectVotes(g){
+  const votes={};
+  alive().forEach(p=>{const v=p.input?.vote;if(v&&v.round===g.round&&v.target&&P(v.target)?.alive){
+    const canDouble=LG.def(theme(),p.roleName).passive==='double'&&!g.mem[p.id]?.double;
+    votes[p.id]={target:v.target,weight:v.weight===2&&canDouble?2:1};
+  }});
+  return votes;
+}
+async function tickVote(g,force=false){
+  const pd=g.vote?.pending;
   if(pd){
-    if(p.playerId===pd.strat){
-      panel('<div class="night-card"><h3>🧠 Stratège</h3><p>Le vote va éliminer <b>'+esc(nameOf(pd.victim))+'</b>. Une fois par partie, tu peux annuler.</p><button class="primary" id="stratYes">🧠 Annuler l’élimination</button><button class="secondary" id="stratNo">Laisser faire</button></div>');
-      $('stratYes').onclick=()=>stratDecide('cancel');
-      $('stratNo').onclick=()=>stratDecide('allow');
-    }else{
-      panel('<div class="night-card"><h3>🧠 Le Stratège décide…</h3><p>Attends sa décision.</p>'+(n.host?'<button class="secondary" id="stratSkip">Passer (le Stratège ne répond pas)</button>':'')+'</div>');
-      if(n.host)$('stratSkip').onclick=()=>stratDecide('allow');
+    const s=P(pd.strat);
+    let decision=pd.forced||null;
+    if(!decision&&s?.input?.strat?.round===g.round)decision=s.input.strat.decision;
+    if(!decision&&!s?.alive)decision='allow';
+    if(!decision)return false;
+    if(decision==='cancel'){
+      g.mem[pd.strat]={...(g.mem[pd.strat]||{}),strategy:true};
+      return endVote(g,null,['🧠 L’élimination de '+LG.nameOf(n.players,pd.candidate)+' a été annulée.']);
     }
-    return;
+    return endVote(g,pd.candidate);
   }
-
-  const mine=p.uses?.vote?.round===g.round?p.uses.vote:null;
-  const voted=alive().filter(x=>x.uses?.vote?.round===g.round).length;
-  const canChange=p.roleName==='Opportuniste'&&(mine?.changes||0)<2;
-  const double=p.roleName==='Speedrunner'&&!p.uses?.doubleUsed&&!mine;
-  const prev=$('voteTarget')?.value;
-  const opts=alive().filter(x=>x.playerId!==p.playerId).map(x=>'<option value="'+x.playerId+'">'+esc(x.pseudo)+'</option>').join('');
-
-  let html='<div class="night-card vote-card"><h3>🗳️ Vote</h3><p>'+voted+'/'+alive().length+' ont voté.</p>';
-  if(mine&&!canChange){
-    html+='<p>✅ Tu as voté pour <b>'+esc(nameOf(mine.target))+'</b>. En attente des autres…</p></div>';
-    panel(html);return;
+  const votes=collectVotes(g);
+  if(!force&&Object.keys(votes).length<alive().length)return false;
+  Object.entries(votes).forEach(([id,v])=>{if(v.weight===2)g.mem[id]={...(g.mem[id]||{}),double:true}});
+  const t=LG.tallyVotes(n.players,votes,g.flags);
+  g.lastTally=t.counts;
+  if(!t.candidate)return endVote(g,null,['⚖️ Égalité : personne n’est éliminé.']);
+  const strat=LG.strategist(theme(),n.players,g.mem);
+  if(strat){
+    g.vote={pending:{candidate:t.candidate,strat:strat.id}};
+    g.message='🧠 Le '+strat.roleName+' réfléchit…';
+    await roomUpdate(g);return true;
   }
-  html+=mine?'<p>Vote actuel : <b>'+esc(nameOf(mine.target))+'</b>. Tu peux encore le changer '+(2-(mine.changes||0))+' fois.</p>':'<p>Choisis qui éliminer.</p>';
-  if(double)html+='<p>⚡ Ton vote comptera double.</p>';
-  html+='<select id="voteTarget"><option value="">Choisir un joueur</option>'+opts+'</select><button class="primary" id="voteConfirm">'+(mine?'🔄 Changer mon vote':'🗳️ Valider mon vote')+'</button></div>';
-  panel(html);
-  if(prev)$('voteTarget').value=prev;
+  return endVote(g,t.candidate);
+}
+async function endVote(g,candidate,msgs){
+  let kabuto=false;
+  if(candidate){
+    const r=LG.eliminateByVote(theme(),n.players,g.round,g.mem,g.flags,candidate);
+    await kill(r.deaths);g.mem=r.mem;msgs=r.messages;kabuto=r.kabuto;
+  }
+  g.vote={pending:null};g.message=(msgs||['Le vote est terminé.']).join('\n');
+  const w=LG.winner(theme(),n.players,g.round,{kabuto});
+  if(w){g.phase='end';g.winner=w;await roomUpdate(g);return true}
+  g.phase='day';g.dayKind='vote';
+  await roomUpdate(g);return true;
+}
+/* Boutons de secours de l'hôte (joueur absent / qui ne répond pas) */
+async function hostSkipStep(){const g=LG.clone(n.game);if(g.phase!=='night')return;g.night.index++;await roomUpdate(g);hostTick()}
+async function hostCloseVote(){const g=LG.clone(n.game);if(g.phase!=='vote')return;if(g.vote?.pending){g.vote.pending.forced='allow'}await tickVote(g,true);hostTick()}
+async function hostNow(){if(n.game?.phase==='day')advanceDay(n.game.round+'-'+n.game.dayKind)}
 
-  $('voteConfirm').onclick=async()=>{
-    const t=$('voteTarget').value;
-    if(!t)return alert('⚠️ Choisis un joueur.');
-    const weight=double?2:(mine?.weight||1);
-    await setMine({vote:{round:g.round,target:t,weight,changes:mine?(mine.changes||0)+1:0},doubleUsed:p.uses?.doubleUsed||weight===2});
-    renderGame();
-    if(n.host)hostTick(n.game);
+/* =====================================================================
+   AFFICHAGE (tous les joueurs)
+   ===================================================================== */
+function renderGame(){
+  const g=n.game;if(!g||!n.roomId)return;
+  applyTheme(theme());
+  if(g.phase==='end')return renderEnd();
+  if(!$('onlineGame').classList.contains('active'))screen('onlineGame');
+  $('onlineRound').textContent='TOUR '+(g.round||1);
+  $('onlinePhase').textContent={reveal:'🎭 Rôles',night:'🌙 Nuit',day:'☀️ Jour',vote:'🗳️ Vote'}[g.phase]||'';
+  $('onlineAlive').textContent=alive().length;
+  $('onlinePlayers').innerHTML=n.players.map(x=>'<div class="player '+(x.alive?'':'dead')+'"><strong>'+esc(x.name)+'</strong><br><small>'+(x.alive?'🟢 Vivant':'⚫ Éliminé')+'</small></div>').join('');
+  const p=me();if(!p)return panel('<div class="night-card"><h3>⚠️ Tu ne fais pas partie de cette partie.</h3></div>');
+  /* On ne reconstruit le panneau que si quelque chose a changé pour moi (évite de vider un menu en cours de choix) */
+  const voteCount=g.phase==='vote'?alive().filter(x=>x.input?.vote?.round===g.round).length:0;
+  const key=[g.seq,p.alive,p.roleName,JSON.stringify(p.input),voteCount,LG.def(theme(),p.roleName).passive==='peek'&&g.phase==='vote'?JSON.stringify(collectVotes(g)):''].join('|');
+  if(key===n.viewKey)return;
+  n.viewKey=key;
+  const keep=[...document.querySelectorAll('#onlineAction select')].map(s=>[s.id,s.value]);
+  if(g.phase==='reveal')renderReveal(p);
+  else if(g.phase==='night')renderNight(p,g);
+  else if(g.phase==='day')renderDay(p,g);
+  else if(g.phase==='vote')renderVote(p,g,voteCount);
+  keep.forEach(([id,v])=>{const s=$(id);if(s&&!s.disabled&&[...s.options].some(o=>o.value===v))s.value=v});
+}
+
+/* ---------- Révélation ---------- */
+function renderReveal(p){
+  if(!p.roleName)return panel('<div class="waiting-role"><div class="role-icon">🃏</div><h2>Distribution des rôles…</h2></div>');
+  if(p.input?.ready)return panel('<div class="waiting-role"><div class="role-icon">⏳</div><h2>Carte révélée</h2><p>Tu es prêt !</p><p>En attente des autres joueurs… ('+n.players.filter(x=>x.input?.ready).length+'/'+n.players.length+')</p></div>');
+  const info=LG.roleInfo(theme(),p,n.players,1),img=LG.cardImage(theme(),p.roleName);
+  const front=img?'<img id="onlineCardImage" class="card-image hidden" src="'+img+'" alt="">':'<div id="onlineCardImage" class="naruto-card-art hidden"><div class="naruto-card-icon">'+info.icon+'</div><div class="naruto-card-title">'+esc(info.name)+'</div><div class="naruto-card-team">'+esc(info.team)+'</div><div class="naruto-card-desc">'+esc(info.desc)+'</div></div>';
+  const back=theme()==='naruto'?'<div id="onlineCardBack" class="naruto-card-art"><div class="naruto-card-icon">🍥</div><div class="naruto-card-title">LOUP-GAROU NARUTO</div><div class="naruto-card-desc">Ta carte est face cachée</div></div>':'<img id="onlineCardBack" class="card-image" src="cartes/dos.png" alt="">';
+  panel('<div class="role-reveal"><div class="role-card-visual">'+back+front+'<div class="card-flip-hint" id="onlineFlipHint">🂠 Ta carte est face cachée</div></div>'+
+    '<button class="primary" id="onlineRevealCard">👁️ Révéler ma carte</button>'+
+    '<div class="night-card role-info hidden" id="onlineRoleInfo"><h3>'+info.icon+' '+esc(info.name)+'</h3><div class="team">'+esc(info.team)+'</div><p>'+esc(info.desc)+'</p>'+info.extra.map(x=>'<p>'+esc(x)+'</p>').join('')+'</div>'+
+    '<div id="onlineMissionBox"></div><button class="primary hidden" id="onlineReady">✅ J’ai vu mon rôle</button></div>');
+  $('onlineRevealCard').onclick=()=>{
+    $('onlineCardBack').classList.add('hidden');$('onlineCardImage').classList.remove('hidden');$('onlineFlipHint').classList.add('hidden');
+    $('onlineRevealCard').classList.add('hidden');$('onlineRoleInfo').classList.remove('hidden');
+    if(p.roleName==='Solo Player')soloMission(p);else $('onlineReady').classList.remove('hidden');
+  };
+  $('onlineReady').onclick=()=>{$('onlineReady').disabled=true;setMine({ready:true})};
+}
+function soloMission(p){
+  $('onlineMissionBox').innerHTML='<div class="solo-mission-box"><h3>🎯 Choisis ta mission</h3><select id="onlineSoloMission"><option value="">Choisir une mission</option>'+LG.SOLO_MISSIONS.map(m=>'<option value="'+m[0]+'">'+m[1]+' — '+esc(m[2])+'</option>').join('')+'</select><button class="primary" id="onlineMissionConfirm">Valider ma mission</button></div>';
+  $('onlineMissionConfirm').onclick=()=>{
+    const v=$('onlineSoloMission').value;if(!v)return alert('⚠️ Choisis une mission.');
+    const targets=v==='chaos'?LG.soloMissionTargets(n.players,p.id):[];
+    if(targets.length)alert('🎯 Tes cibles : '+targets.map(id=>LG.nameOf(n.players,id)).join(' et '));
+    $('onlineMissionConfirm').disabled=true;
+    setMine({soloMission:v,soloTargets:targets,ready:true});
   };
 }
 
-async function stratDecide(d){
-  const g=JSON.parse(JSON.stringify(n.game));
-  g.vote.pending.decision=d;
-  await roomUpdate(g);
+/* ---------- Nuit ---------- */
+function myNotes(p,g){return(p.input?.notes||[]).filter(x=>x.round===g.round).map(x=>'<p>'+x.text+'</p>').join('')}
+function renderNight(p,g){
+  const hostBtn=n.host?'<button class="secondary" id="hostSkip">⏭️ Passer ce tour (joueur absent)</button>':'';
+  const bindHost=()=>{if(n.host&&$('hostSkip'))$('hostSkip').onclick=hostSkipStep};
+  if(!p.alive){panel('<div class="night-card"><h3>👻 Tu es éliminé</h3><p>Observe la suite de la partie en silence.</p>'+hostBtn+'</div>');return bindHost()}
+  const step=g.night.steps[g.night.index];
+  const done=p.input?.act&&p.input.act.round===g.round&&p.input.act.index===g.night.index;
+  if(!step||step.actor!==p.id||done){
+    const notes=myNotes(p,g);
+    panel('<div class="night-card"><h3>🌙 '+(theme()==='naruto'?'Nuit ninja':'Nuit')+'</h3>'+(notes?'<h3>🤫 Résultat secret</h3>'+notes:'')+'<p>Un autre joueur agit. Garde les yeux sur ton écran… et attends.</p>'+hostBtn+'</div>');
+    return bindHost();
+  }
+  const pr=LG.stepPrompt(theme(),step,n.players,g.round);
+  if(!pr.confirmOnly&&!pr.options.length){
+    panel('<div class="night-card"><h3>'+esc(pr.title)+'</h3><p>Aucune cible possible cette nuit.</p><button class="primary" id="nightSkip">Continuer</button></div>');
+    $('nightSkip').onclick=()=>submitAct(p,g,null,false,null);return;
+  }
+  const opts=pr.options.map(id=>'<option value="'+id+'">'+esc(LG.nameOf(n.players,id))+'</option>').join('');
+  panel('<div class="night-card"><h3>'+esc(pr.title)+'</h3><p>'+esc(pr.text)+'</p>'+(pr.confirmOnly?'':'<select id="nightTarget"><option value="">Choisir un joueur</option>'+opts+'</select>')+
+    '<button class="primary" id="nightConfirm">'+(step.type==='kill'?'☠️ Choisir la victime':'⚡ Utiliser le pouvoir')+'</button>'+(pr.canSkip?'<button class="secondary" id="nightSkip">Passer</button>':'')+hostBtn+'</div>');
+  bindHost();
+  if(pr.canSkip)$('nightSkip').onclick=()=>submitAct(p,g,null,false,null);
+  $('nightConfirm').onclick=()=>{
+    const target=pr.confirmOnly?null:$('nightTarget').value;
+    if(!pr.confirmOnly&&!target)return alert('⚠️ Choisis un joueur.');
+    const result=target?LG.instantResult(theme(),n.players,g.round,g.night.actions,step,target):null;
+    submitAct(p,g,target,pr.confirmOnly,result);
+  };
+}
+function submitAct(p,g,target,confirm,result){
+  const notes=(p.input?.notes||[]).filter(x=>x.round===g.round);
+  if(result)notes.push({round:g.round,text:result});
+  setMine({act:{round:g.round,index:g.night.index,target,confirm:!!confirm},notes});
 }
 
-async function resolveVote(g){
-  const al=alive();
+/* ---------- Jour ---------- */
+function renderDay(p,g){
+  const priv=(g.privates?.[p.id]||[]).map(m=>'<p>'+esc(m)+'</p>').join('');
+  const notes=g.dayKind==='night'?myNotes(p,g):'';
+  const board=g.dayKind==='vote'&&g.lastTally?.length?g.lastTally.map(([id,c])=>'<div class="vote-result">'+esc(LG.nameOf(n.players,id))+'<span>'+c+' voix</span></div>').join(''):'';
+  panel('<div class="night-card"><h3>'+(g.dayKind==='vote'?'📊 Résultat du vote':'☀️ Le jour se lève')+'</h3>'+board+'<p>'+esc(g.message||'').replace(/\n/g,'<br>')+'</p>'+
+    (priv||notes?'<h3>🤫 Pour toi seul</h3>'+priv+notes:'')+
+    '<p class="hint">'+(g.dayKind==='vote'?'La nuit suivante arrive…':'Discutez ! Le vote commence dans quelques secondes…')+'</p>'+
+    (n.host?'<button class="secondary" id="hostNow">⏭️ Continuer maintenant</button>':'')+'</div>');
+  if(n.host)$('hostNow').onclick=hostNow;
+}
 
-  /* Le Stratège a déjà été consulté ? */
-  if(g.vote?.pending){
-    const pd=g.vote.pending;
-    if(!pd.decision)return;
-    if(pd.decision==='cancel'){
-      await setUses(n.players.find(x=>x.playerId===pd.strat),{strategyUsed:true});
-      return endVote(g,null,'🧠 Le Stratège a annulé l’élimination de '+nameOf(pd.victim)+'.');
-    }
-    return endVote(g,pd.victim);
-  }
-
-  /* Tout le monde a voté ? */
-  const voted=al.filter(p=>p.uses?.vote?.round===g.round);
-  if(voted.length<al.length)return;
-
-  const c={};
-  voted.forEach(p=>{const v=p.uses.vote;c[v.target]=(c[v.target]||0)+(v.weight||1)});
-  const e=Object.entries(c).sort((a,b)=>b[1]-a[1]);
-  if(!e.length||(e[1]&&e[1][1]===e[0][1]))return endVote(g,null,'⚖️ Égalité : personne n’est éliminé.');
-
-  const victim=e[0][0];
-  const strat=al.find(p=>['Stratège','Shikamaru'].includes(p.roleName)&&!p.uses?.strategyUsed);
-  if(strat){
-    g.vote.pending={victim,strat:strat.playerId,decision:null};
-    g.message='🧠 Le Stratège peut annuler l’élimination…';
-    await roomUpdate(g);
+/* ---------- Vote ---------- */
+function renderVote(p,g,voteCount){
+  const hostBtn=n.host?'<button class="secondary" id="hostClose">⏭️ Clore le vote maintenant (joueurs absents)</button>':'';
+  const bindHost=()=>{if(n.host&&$('hostClose'))$('hostClose').onclick=hostCloseVote};
+  const pd=g.vote?.pending;
+  if(pd){
+    if(p.id===pd.strat&&p.alive){
+      panel('<div class="night-card"><h3>🧠 '+esc(p.roleName)+'</h3><p>Le vote va éliminer <b>'+esc(LG.nameOf(n.players,pd.candidate))+'</b>. Une fois par partie, tu peux annuler.</p><button class="primary" id="stratYes">🧠 Annuler l’élimination</button><button class="secondary" id="stratNo">Laisser faire</button></div>');
+      $('stratYes').onclick=()=>setMine({strat:{round:g.round,decision:'cancel'}});
+      $('stratNo').onclick=()=>setMine({strat:{round:g.round,decision:'allow'}});
+    }else{panel('<div class="night-card"><h3>🧠 Une décision est en cours…</h3><p>Attends quelques secondes.</p>'+hostBtn+'</div>');bindHost()}
     return;
   }
-  return endVote(g,victim);
-}
-
-async function endVote(g,victimId,msg){
-  if(victimId){
-    const v=n.players.find(x=>x.playerId===victimId);
-    if(v){await sb.from('game_players').update({alive:false}).eq('id',v.id);v.alive=false;msg='☠️ '+v.pseudo+' est éliminé par le vote.'}
+  if(!p.alive){panel('<div class="night-card"><h3>👻 Tu es éliminé</h3><p>'+voteCount+'/'+alive().length+' ont voté.</p>'+hostBtn+'</div>');return bindHost()}
+  const mine=p.input?.vote?.round===g.round?p.input.vote:null;
+  if(mine){panel('<div class="night-card vote-card"><h3>✅ Vote enregistré</h3><p>Tu as voté contre <b>'+esc(LG.nameOf(n.players,mine.target))+'</b>.</p><p>'+voteCount+'/'+alive().length+' ont voté. En attente des autres…</p>'+hostBtn+'</div>');return bindHost()}
+  const d=LG.def(theme(),p.roleName);
+  const canDouble=d.passive==='double'&&!g.mem?.[p.id]?.double;
+  const puppet=g.flags?.puppets?.[p.id]&&P(g.flags.puppets[p.id])?.alive;
+  let peek='';
+  if(d.passive==='peek'){
+    const t=LG.tallyVotes(n.players,collectVotes(g),g.flags);
+    peek='<p>🎯 Votes déjà exprimés (en direct) :</p>'+(t.counts.length?t.counts.map(([id,c])=>'<div class="vote-result">'+esc(LG.nameOf(n.players,id))+'<span>'+c+'</span></div>').join(''):'<p class="hint">Aucun vote pour l’instant.</p>');
   }
-  g.vote={pending:null};
-  const w=winner();
-  if(w)return finish(w,g,msg);
-  g.phase='day';g.dayKind='vote';g.message=msg||'Le vote est terminé.';
-  await roomUpdate(g);
-  await sleep(5000);
-  const g2=n.game;
-  g2.round++;
-  await startNight(g2);
+  const opts=alive().filter(x=>x.id!==p.id).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+  panel('<div class="night-card vote-card"><h3>🗳️ Vote</h3><p>'+voteCount+'/'+alive().length+' ont voté.</p>'+peek+(puppet?'<p>🦂 Des fils invisibles guident ta main : ton vote suivra celui de Sasori.</p>':'')+
+    '<select id="voteTarget"><option value="">Choisir un joueur</option>'+opts+'</select>'+
+    (canDouble?'<label class="role-option"><input type="checkbox" id="useDouble"><span>⚡ <b>Utiliser mon vote double</b><small>Une seule fois par partie.</small></span></label>':'')+
+    '<button class="primary" id="voteConfirm">🗳️ Valider mon vote</button>'+hostBtn+'</div>');
+  bindHost();
+  $('voteConfirm').onclick=()=>{
+    const t=$('voteTarget').value;if(!t)return alert('⚠️ Choisis un joueur.');
+    $('voteConfirm').disabled=true;
+    setMine({vote:{round:g.round,target:t,weight:canDouble&&$('useDouble')?.checked?2:1}});
+  };
 }
 
-/* ---------- Fin de partie ---------- */
-
+/* ---------- Fin ---------- */
 function renderEnd(){
-  const g=n.game,w=g.winner,t=WIN[w]||['🏆','Victoire !',''];
-  const op=n.players.find(p=>p.roleName==='Opportuniste'&&p.alive);
-  const bonus=op&&['BONS','HACKERS','VILLAGE','AKATSUKI'].includes(w)?' L’Opportuniste gagne aussi avec le camp victorieux.':'';
-  panel('<div class="night-card"><h2>'+t[0]+' '+esc(t[1])+'</h2><p>'+esc(t[2]+bonus)+'</p><div class="players-grid">'
-    +n.players.map(p=>'<div class="player '+(p.alive?'active':'dead')+'"><strong>'+(p.alive?'🟢':'⚫')+' '+esc(p.pseudo)+'</strong><small>'+(p.role?.[0]||'🎭')+' '+esc(p.roleName||'?')+'</small></div>').join('')
-    +'</div><button class="primary" id="onlineQuit">🏠 Retour à l’accueil</button></div>');
-  $('onlineQuit').onclick=()=>location.reload();
+  const g=n.game,w=g.winner||{icon:'🏆',title:'Victoire !',msg:''};
+  screen('onlineEnd');
+  $('onlineWinnerIcon').textContent=w.icon;$('onlineWinnerTitle').textContent=w.title;
+  $('onlineFinalPlayers').innerHTML='<p class="subtitle">'+esc(w.msg)+'</p>'+n.players.map(p=>{const i=LG.roleInfo(theme(),p,n.players,g.round||1);return'<div class="final-player '+(p.alive?'':'dead')+'"><strong>'+(p.alive?'🟢':'⚫')+' '+esc(p.name)+'</strong><span><b>'+i.icon+' '+esc(p.roleName||'?')+'</b><br><small>'+esc(i.team)+'</small></span></div>'}).join('');
 }
+
+/* ---------- Boutons ---------- */
+$('onlineBtn')?.addEventListener('click',()=>screen('online'));
+$('createOnlineBtn')?.addEventListener('click',()=>screen('onlineCreate'));
+$('joinOnlineBtn')?.addEventListener('click',()=>screen('onlineJoin'));
+$('onlineTheme')?.addEventListener('change',()=>applyTheme($('onlineTheme').value));
+$('createRoomBtn')?.addEventListener('click',create);
+$('joinRoomBtn')?.addEventListener('click',join);
+$('leaveOnlineBtn')?.addEventListener('click',leave);
+$('lobbyOptionsBtn')?.addEventListener('click',()=>{$('onlinePlayerCount').textContent=n.settings.max;renderRoleOptions();screen('onlineOptions')});
+$('saveOnlineOptionsBtn')?.addEventListener('click',saveOptions);
+$('startOnlineGameBtn')?.addEventListener('click',start);
+$('onlineMinusPlayers')?.addEventListener('click',()=>{const e=$('onlinePlayerCount');e.textContent=Math.max(LG.minPlayers(theme()),n.players.length,+e.textContent-1)});
+$('onlinePlusPlayers')?.addEventListener('click',()=>{const e=$('onlinePlayerCount');e.textContent=Math.min(20,+e.textContent+1)});
 });
